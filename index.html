@@ -986,16 +986,16 @@ function renderRecords(){
     } else if(rec.status==='late'){
       const over=dl?Math.floor((now-dl)/60000):0;
       st='<span class="pill pill-late">Vencido</span>'; cd=`<span class="cd cd-d">+${over}m</span>`;
-      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
+      ac=`<button class="btn-icon" onclick="window.doDevolver('${rec.id}')" style="cursor:pointer">📥 Devolver</button>`;
     } else if(rec.status==='warned'){
       const mins=diff!==null?Math.ceil(diff):'?';
       st='<span class="pill pill-warned">Por vencer</span>'; cd=`<span class="cd cd-w">${mins}m</span>`;
-      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
+      ac=`<button class="btn-icon" onclick="window.doDevolver('${rec.id}')" style="cursor:pointer">📥 Devolver</button>`;
     } else {
       const mins=diff!==null?Math.ceil(diff):'?';
       const c=diff!==null?(diff<30?'cd-w':'cd-ok'):'cd-ok';
       st='<span class="pill pill-active">Activo</span>'; cd=`<span class="cd ${c}">${mins}m</span>`;
-      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
+      ac=`<button class="btn-icon" onclick="window.doDevolver('${rec.id}')" style="cursor:pointer">📥 Devolver</button>`;
     }
     const t=new Date(rec.deliveredAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
     return `<tr>
@@ -1041,18 +1041,18 @@ function renderRecepCards(){
       const over=dl?Math.floor((now-dl)/60000):0;
       st='<span class="pill pill-late">⚠ Vencido</span>';
       cd=`<span class="cd cd-danger">+${over}m</span>`;
-      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver" style="background:var(--danger);color:#fff;">📥 Devolver</button>`;
+      ac=`<button class="btn-icon" onclick="window.doDevolver('${rec.id}')" style="background:var(--danger);color:#fff;cursor:pointer">📥 Devolver</button>`;
     }else if(rec.status==='warned'){
       const mins=diff!==null?Math.ceil(diff):'?';
       st='<span class="pill pill-warned">⏰ Por vencer</span>';
       cd=`<span class="cd cd-warn">${mins}m</span>`;
-      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
+      ac=`<button class="btn-icon" onclick="window.doDevolver('${rec.id}')" style="cursor:pointer">📥 Devolver</button>`;
     }else{
       const mins=diff!==null?Math.ceil(diff):'?';
       const cls=diff!==null?(diff<30?'cd-warn':'cd-ok'):'cd-ok';
       st='<span class="pill pill-active">Activo</span>';
       cd=`<span class="cd ${cls}">${mins}m</span>`;
-      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
+      ac=`<button class="btn-icon" onclick="window.doDevolver('${rec.id}')" style="cursor:pointer">📥 Devolver</button>`;
     }
 
     const radioList=rec.radios&&rec.radios.length<=4
@@ -1333,6 +1333,9 @@ function confirmCSVImport(){
 // ══════════════════════════════════════════════
 function showToast(msg,danger=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(danger?' danger':'')+' show';setTimeout(()=>t.className='toast',3200);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+window.doDevolver = function(id){ openScanPanel(id); };
+window.doResend = function(id){ resendEmail(id); };
 
 // Attach click handlers directly to recep-action buttons
 function attachRecepActions(){
