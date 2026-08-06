@@ -1326,11 +1326,14 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 document.addEventListener('click', function(e){
   const btn = e.target.closest('.recep-action');
   if(!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
   const id = btn.getAttribute('data-id');
   const action = btn.getAttribute('data-action');
+  console.log('recep-action clicked:', action, id);
   if(action === 'devolver') openScanPanel(id);
   if(action === 'resend') resendEmail(id);
-});
+}, true); // use capture phase
 
 init();
 </script>
