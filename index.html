@@ -370,7 +370,8 @@ tbody td{padding:9px 12px;vertical-align:middle;}
   <div class="recepcion-layout">
 
     <!-- PANEL DE ESCANEO ACTIVO -->
-    <div class="scan-panel" id="recepScanPanel">
+    <div id="recepOverlay" onclick="closeScanPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:149;"></div>
+    <div class="scan-panel" id="recepScanPanel" style="display:none;">
       <div class="scan-panel-header">
         <h3 id="recepPanelTitle">📥 Registrar devolución</h3>
         <button class="scan-panel-close" onclick="closeScanPanel()">✕</button>
@@ -840,12 +841,18 @@ function openScanPanel(id){
   document.getElementById('recepResult').innerHTML='';
   document.getElementById('recepActions').style.display='flex';
   renderExpected(rec);
+  // Show as fixed overlay
   const panel=document.getElementById('recepScanPanel');
-  panel.classList.add('open');
-  panel.scrollIntoView({behavior:'smooth',block:'start'});
-  setTimeout(()=>document.getElementById('recepScanInput').focus(),300);
+  panel.style.cssText='display:block;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:150;width:90%;max-width:560px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);';
+  document.getElementById('recepOverlay').style.display='block';
+  setTimeout(()=>document.getElementById('recepScanInput').focus(),200);
 }
-function closeScanPanel(){ document.getElementById('recepScanPanel').classList.remove('open'); recepCurrentId=null; recepReturned=[]; }
+function closeScanPanel(){ 
+  const panel=document.getElementById('recepScanPanel');
+  panel.style.display='none';
+  document.getElementById('recepOverlay').style.display='none';
+  recepCurrentId=null; recepReturned=[]; 
+}
 
 function renderExpected(rec){
   document.getElementById('recepExpected').innerHTML=rec.radios.map(r=>
