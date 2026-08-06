@@ -348,7 +348,16 @@ tbody td{padding:9px 12px;vertical-align:middle;}
       <div class="table-wrap">
         <div class="table-hdr">
           <h3>📋 Registros del turno</h3>
-          <span style="font-size:11px;color:var(--muted);" id="recordCount">0 registros</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <select id="entregaFilter" onchange="renderRecords()" style="background:var(--steel);border:1px solid var(--steel-light);border-radius:6px;color:var(--ice);padding:4px 9px;font-size:11px;outline:none;cursor:pointer;">
+              <option value="all">Todos los estados</option>
+              <option value="active">Activo</option>
+              <option value="warned">Por vencer</option>
+              <option value="late">Vencido</option>
+              <option value="returned">Devuelto</option>
+            </select>
+            <span style="font-size:11px;color:var(--muted);" id="recordCount">0 registros</span>
+          </div>
         </div>
         <table>
           <thead>
@@ -958,10 +967,11 @@ function updateCountdowns(){
 // ══════════════════════════════════════════════
 function renderRecords(){
   const tbody=document.getElementById('recordsBody');
+  const filterVal=document.getElementById('entregaFilter')?.value||'all';
+  let all=[...records].sort((a,b)=>{const o={late:0,warned:1,active:2,returned:3};return(o[a.status]||2)-(o[b.status]||2);});
+  if(filterVal!=='all') all=all.filter(r=>r.status===filterVal);
   const active=records.filter(r=>r.status!=='returned');
-  const done=records.filter(r=>r.status==='returned');
-  const all=[...active,...done];
-  document.getElementById('recordCount').textContent=`${active.length} activo${active.length!==1?'s':''}`;
+  document.getElementById('recordCount').textContent=`${all.length} mostrado${all.length!==1?'s':''} · ${active.length} activo${active.length!==1?'s':''}`;
   if(!all.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><div>📻</div>Sin registros</div></td></tr>';return;}
   const now=new Date();
   tbody.innerHTML=all.map(rec=>{
@@ -977,16 +987,16 @@ function renderRecords(){
     } else if(rec.status==='late'){
       const over=dl?Math.floor((now-dl)/60000):0;
       st='<span class="pill pill-late">Vencido</span>'; cd=`<span class="cd cd-d">+${over}m</span>`;
-      ac=`<button class="btn-icon" onclick="switchTab('recepcion');openScanPanel('${rec.id}')">📥 Devolver</button>`;
+      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
     } else if(rec.status==='warned'){
       const mins=diff!==null?Math.ceil(diff):'?';
       st='<span class="pill pill-warned">Por vencer</span>'; cd=`<span class="cd cd-w">${mins}m</span>`;
-      ac=`<button class="btn-icon" onclick="switchTab('recepcion');openScanPanel('${rec.id}')">📥 Devolver</button>`;
+      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
     } else {
       const mins=diff!==null?Math.ceil(diff):'?';
       const c=diff!==null?(diff<30?'cd-w':'cd-ok'):'cd-ok';
       st='<span class="pill pill-active">Activo</span>'; cd=`<span class="cd ${c}">${mins}m</span>`;
-      ac=`<button class="btn-icon" onclick="switchTab('recepcion');openScanPanel('${rec.id}')">📥 Devolver</button>`;
+      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
     }
     const t=new Date(rec.deliveredAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
     return `<tr>
@@ -1323,7 +1333,7 @@ function confirmCSVImport(){
 function showToast(msg,danger=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(danger?' danger':'')+' show';setTimeout(()=>t.className='toast',3200);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
-// Event delegation for recepcion table buttons
+// Event delegation for all devolver/resend buttons
 document.addEventListener('click', function(e){
   const btn = e.target.closest('.recep-action');
   if(!btn) return;
@@ -1331,10 +1341,11 @@ document.addEventListener('click', function(e){
   e.stopPropagation();
   const id = btn.getAttribute('data-id');
   const action = btn.getAttribute('data-action');
-  console.log('recep-action clicked:', action, id);
-  if(action === 'devolver') openScanPanel(id);
+  if(action === 'devolver'){
+    openScanPanel(id);
+  }
   if(action === 'resend') resendEmail(id);
-}, true); // use capture phase
+}, true);
 
 init();
 </script>
