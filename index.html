@@ -369,27 +369,6 @@ tbody td{padding:9px 12px;vertical-align:middle;}
 <div class="tab-content" id="tab-recepcion-content">
   <div class="recepcion-layout">
 
-    <!-- MODAL DE DEVOLUCIÓN -->
-    <div id="recepOverlay" onclick="closeScanPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:149;"></div>
-    <div id="recepScanPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:150;width:90%;max-width:540px;background:var(--navy-mid);border:1px solid var(--steel-light);border-radius:14px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.5);max-height:85vh;overflow-y:auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h3 id="recepPanelTitle" style="font-size:14px;font-weight:600;">📥 Registrar devolución</h3>
-        <button onclick="closeScanPanel()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">✕</button>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Escanea los radios que se devuelven — se marcan en verde conforme los escanas.</div>
-      <div id="recepExpected" class="expected-chips" style="margin-bottom:10px;"></div>
-      <div class="scan-row" style="margin-bottom:8px;">
-        <input type="text" id="recepScanInput" placeholder="Escanear # radio" maxlength="20" onkeydown="if(event.key==='Enter') addRecepRadio()">
-        <button class="btn-plus" onclick="addRecepRadio()">＋</button>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;" id="recepMeta">Devueltos: 0 / 0</div>
-      <div id="recepResult"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;" id="recepActions">
-        <button class="btn-sec" onclick="closeScanPanel()">Cancelar</button>
-        <button class="btn-sig" onclick="confirmRecepReturn()">✔ Confirmar devolución</button>
-      </div>
-    </div>
-
     <!-- TABLA DE REGISTROS -->
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -428,6 +407,27 @@ tbody td{padding:9px 12px;vertical-align:middle;}
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ══════ SCAN PANEL MODAL ══════ -->
+<div id="recepOverlay" onclick="closeScanPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:149;"></div>
+<div id="recepScanPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:150;width:90%;max-width:540px;background:var(--navy-mid);border:1px solid var(--steel-light);border-radius:14px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.5);max-height:85vh;overflow-y:auto;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <h3 id="recepPanelTitle" style="font-size:14px;font-weight:600;">📥 Registrar devolución</h3>
+    <button onclick="closeScanPanel()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">✕</button>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Escanea los radios que se devuelven — se marcan en verde conforme los escanas.</div>
+  <div id="recepExpected" class="expected-chips" style="margin-bottom:10px;"></div>
+  <div class="scan-row" style="margin-bottom:8px;">
+    <input type="text" id="recepScanInput" placeholder="Escanear # radio" maxlength="20" onkeydown="if(event.key==='Enter') addRecepRadio()">
+    <button class="btn-plus" onclick="addRecepRadio()">＋</button>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:12px;" id="recepMeta">Devueltos: 0 / 0</div>
+  <div id="recepResult"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;" id="recepActions">
+    <button class="btn-sec" onclick="closeScanPanel()">Cancelar</button>
+    <button class="btn-sig" onclick="confirmRecepReturn()">✔ Confirmar devolución</button>
   </div>
 </div>
 
@@ -861,17 +861,14 @@ function openScanPanel(id){
   document.getElementById('recepResult').innerHTML='';
   document.getElementById('recepActions').style.display='flex';
   renderExpected(rec);
-  // Show as fixed overlay
-  const panel=document.getElementById('recepScanPanel');
-  panel.style.cssText='display:block;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:150;width:90%;max-width:560px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);';
   document.getElementById('recepOverlay').style.display='block';
+  document.getElementById('recepScanPanel').style.display='block';
   setTimeout(()=>document.getElementById('recepScanInput').focus(),200);
 }
-function closeScanPanel(){ 
-  const panel=document.getElementById('recepScanPanel');
-  panel.style.display='none';
+function closeScanPanel(){
+  document.getElementById('recepScanPanel').style.display='none';
   document.getElementById('recepOverlay').style.display='none';
-  recepCurrentId=null; recepReturned=[]; 
+  recepCurrentId=null; recepReturned=[];
 }
 
 function renderExpected(rec){
