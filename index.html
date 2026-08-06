@@ -885,9 +885,14 @@ function closeScanPanel(){
 }
 
 function renderExpected(rec){
-  document.getElementById('recepExpected').innerHTML=rec.radios.map(r=>
-    `<span class="exp-chip${recepReturned.includes(r)?' done':''}" id="exp-${esc(r)}">📻 ${esc(r)}</span>`
-  ).join('');
+  const container = document.getElementById('recepExpected');
+  container.innerHTML = '';
+  (rec.radios||[]).forEach(function(r){
+    const span = document.createElement('span');
+    span.className = 'exp-chip' + (recepReturned.includes(r) ? ' done' : '');
+    span.textContent = '📻 ' + r;
+    container.appendChild(span);
+  });
 }
 
 function addRecepRadio(){
