@@ -864,18 +864,45 @@ function registerDelivery(){
 // RECEPCIÓN / DEVOLUCIÓN
 // ══════════════════════════════════════════════
 function openScanPanel(id){
-  recepCurrentId=id; recepReturned=[];
-  const rec=records.find(r=>r.id===id); if(!rec) return;
-  document.getElementById('recepPanelTitle').textContent=`📥 Devolución — ${rec.requester} | TL: ${rec.tl}`;
-  document.getElementById('recepScanInput').value='';
-  document.getElementById('recepMeta').textContent=`Devueltos: 0 / ${rec.radios.length}`;
-  document.getElementById('recepResult').innerHTML='';
-  document.getElementById('recepActions').style.display='flex';
-  renderExpected(rec);
-  document.getElementById('recepOverlay').style.display='block';
-  document.getElementById('recepScanPanel').style.display='block';
-  window._syncPaused=true; // pause auto-sync
-  setTimeout(()=>document.getElementById('recepScanInput').focus(),200);
+  // Find record
+  const rec = records.find(function(r){ return String(r.id) === String(id); });
+  if(!rec){ showToast('⚠️ Registro no encontrado',true); return; }
+
+  // Reset state
+  recepCurrentId = String(id);
+  recepReturned = [];
+
+  // Set title
+  document.getElementById('recepPanelTitle').textContent = 'Devolución — ' + rec.requester + ' | TL: ' + rec.tl;
+
+  // Clear input
+  document.getElementById('recepScanInput').value = '';
+
+  // Set meta
+  document.getElementById('recepMeta').textContent = 'Devueltos: 0 / ' + rec.radios.length;
+
+  // Clear result
+  document.getElementById('recepResult').innerHTML = '';
+
+  // Show actions
+  document.getElementById('recepActions').style.display = 'flex';
+
+  // Build expected chips
+  const container = document.getElementById('recepExpected');
+  container.innerHTML = '';
+  (rec.radios || []).forEach(function(r){
+    const span = document.createElement('span');
+    span.className = 'exp-chip';
+    span.textContent = '📻 ' + r;
+    container.appendChild(span);
+  });
+
+  // Show modal
+  document.getElementById('recepOverlay').style.display = 'block';
+  document.getElementById('recepScanPanel').style.display = 'block';
+
+  // Focus input
+  setTimeout(function(){ document.getElementById('recepScanInput').focus(); }, 200);
 }
 function closeScanPanel(){
   document.getElementById('recepScanPanel').style.display='none';
