@@ -1025,23 +1025,23 @@ function renderRecepCards(){
       st=hm?`<span class="pill pill-partial">Parcial</span>`:`<span class="pill pill-returned">✅ Devuelto</span>`;
       const rt=rec.returnedAt?new Date(rec.returnedAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:true}):'';
       cd=`<span style="color:var(--muted);font-size:11px;">${rt}</span>`;
-      ac=`<button class="btn-icon" onclick="resendEmail('${rec.id}')">📧 Reenviar</button>`;
+      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="resend">📧 Reenviar</button>`;
     }else if(rec.status==='late'){
       const over=dl?Math.floor((now-dl)/60000):0;
       st='<span class="pill pill-late">⚠ Vencido</span>';
       cd=`<span class="cd cd-danger">+${over}m</span>`;
-      ac=`<button class="btn-icon" style="background:var(--danger);color:#fff;" onclick="openScanPanel('${rec.id}')">📥 Devolver</button>`;
+      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver" style="background:var(--danger);color:#fff;">📥 Devolver</button>`;
     }else if(rec.status==='warned'){
       const mins=diff!==null?Math.ceil(diff):'?';
       st='<span class="pill pill-warned">⏰ Por vencer</span>';
       cd=`<span class="cd cd-warn">${mins}m</span>`;
-      ac=`<button class="btn-icon" onclick="openScanPanel('${rec.id}')">📥 Devolver</button>`;
+      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
     }else{
       const mins=diff!==null?Math.ceil(diff):'?';
       const cls=diff!==null?(diff<30?'cd-warn':'cd-ok'):'cd-ok';
       st='<span class="pill pill-active">Activo</span>';
       cd=`<span class="cd ${cls}">${mins}m</span>`;
-      ac=`<button class="btn-icon" onclick="openScanPanel('${rec.id}')">📥 Devolver</button>`;
+      ac=`<button class="btn-icon recep-action" data-id="${rec.id}" data-action="devolver">📥 Devolver</button>`;
     }
 
     const radioList=rec.radios&&rec.radios.length<=4
@@ -1321,6 +1321,16 @@ function confirmCSVImport(){
 // ══════════════════════════════════════════════
 function showToast(msg,danger=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(danger?' danger':'')+' show';setTimeout(()=>t.className='toast',3200);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// Event delegation for recepcion table buttons
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('.recep-action');
+  if(!btn) return;
+  const id = btn.getAttribute('data-id');
+  const action = btn.getAttribute('data-action');
+  if(action === 'devolver') openScanPanel(id);
+  if(action === 'resend') resendEmail(id);
+});
 
 init();
 </script>
