@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadioControl — Gestión de Radios</title>
+<style>
+:root{--navy:#0F1B2D;--navy-mid:#1A2E4A;--steel:#2A3F5F;--steel-light:#3D5A80;--signal:#F5C518;--signal-dim:#C9A30E;--ice:#F0F4F8;--ice-mid:#D9E4F0;--ok:#2ECC71;--warn:#E67E22;--danger:#E74C3C;--muted:#8899AA;--radius:10px;--shadow:0 4px 24px rgba(0,0,0,.2);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,sans-serif;background:var(--navy);color:var(--ice);min-height:100vh;display:flex;flex-direction:column;}
+
+/* HEADER */
+header{background:var(--navy-mid);border-bottom:2px solid var(--signal);padding:13px 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.brand{display:flex;align-items:center;gap:11px;}
+.brand-icon{width:38px;height:38px;background:var(--signal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:19px;}
+.brand-text h1{font-family:'Segoe UI',system-ui,sans-serif;font-size:18px;font-weight:700;letter-spacing:-.5px;}
+.brand-text span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.3px;}
+.header-right{display:flex;align-items:center;gap:9px;}
+.clock{font-family:'Courier New',monospace;font-size:16px;color:var(--signal);font-weight:600;}
+.shift-badge{background:var(--steel);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--ice-mid);}
+.hdr-btn{background:var(--steel);border:1px solid var(--steel-light);border-radius:7px;padding:6px 12px;color:var(--ice);font-size:12px;cursor:pointer;transition:background .2s;white-space:nowrap;}
+.hdr-btn:hover{background:var(--steel-light);}
+
+/* CONFIG BAR */
+.config-bar{background:var(--steel);padding:8px 26px;display:flex;align-items:center;gap:16px;font-size:12px;color:var(--ice-mid);flex-wrap:wrap;}
+.config-bar label{display:flex;align-items:center;gap:6px;}
+.config-bar select,.config-bar input[type=number]{background:var(--navy-mid);border:1px solid var(--steel-light);border-radius:5px;color:var(--ice);padding:3px 8px;font-size:12px;font-family:'Courier New',monospace;outline:none;cursor:pointer;}
+.config-bar select{min-width:88px;}
+
+/* TABS */
+.tab-bar{display:flex;background:var(--navy-mid);border-bottom:1px solid var(--steel);padding:0 26px;}
+.tab-btn{padding:12px 22px;font-size:14px;font-family:'Segoe UI',system-ui,sans-serif;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:color .2s,border-color .2s;display:flex;align-items:center;gap:7px;}
+.tab-btn:hover{color:var(--ice);}
+.tab-btn.active{color:var(--signal);border-bottom-color:var(--signal);}
+.tab-badge{background:var(--danger);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;min-width:18px;text-align:center;}
+.tab-badge.ok{background:var(--ok);color:var(--navy);}
+
+/* TAB CONTENT */
+.tab-content{display:none;flex:1;}
+.tab-content.active{display:flex;flex-direction:column;}
+
+/* ── ENTREGA TAB ── */
+.entrega-layout{display:grid;grid-template-columns:370px 1fr;flex:1;overflow:hidden;}
+.panel-left{background:var(--navy-mid);border-right:1px solid var(--steel);padding:20px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+.panel-right{padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+
+/* ── RECEPCION TAB ── */
+.recepcion-layout{padding:20px 26px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;flex:1;}
+
+/* FIELDS */
+.section-title{font-family:'Segoe UI',system-ui,sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--signal);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--steel);}
+.field{margin-bottom:10px;}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.7px;}
+.field input,.field select{width:100%;background:var(--steel);border:1px solid var(--steel-light);border-radius:var(--radius);color:var(--ice);padding:9px 12px;font-size:13px;font-family:system-ui,sans-serif;transition:border .2s;outline:none;appearance:none;-webkit-appearance:none;}
+.field input:focus,.field select:focus{border-color:var(--signal);}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath fill='%238899AA' d='M5.5 7L0 0h11z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer;}
+.field select option{background:var(--navy-mid);}
+
+/* TL CARD */
+.tl-card{background:var(--steel);border:1px solid var(--ok);border-radius:var(--radius);padding:9px 12px;display:flex;justify-content:space-between;align-items:center;}
+.tl-card-info strong{display:block;font-size:13px;}
+.tl-card-info span{font-size:11px;color:var(--muted);}
+.tl-card-clear{background:none;border:none;color:var(--danger);font-size:17px;cursor:pointer;padding:0;line-height:1;}
+.sub-field{margin-top:7px;}
+.sub-field label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.7px;}
+.sub-field input{width:100%;background:var(--steel);border:1px solid var(--steel-light);border-radius:8px;color:var(--ice);padding:8px 12px;font-size:13px;font-family:system-ui,sans-serif;outline:none;}
+.sub-field input:focus{border-color:var(--signal);}
+
+/* SCANNER */
+.scanner-area{background:var(--steel);border-radius:var(--radius);padding:12px;}
+.scan-row{display:flex;gap:6px;margin-bottom:8px;}
+.scan-row input{flex:1;background:var(--navy);border:2px solid var(--steel-light);border-radius:7px;color:var(--signal);padding:8px 12px;font-size:14px;font-family:'Courier New',monospace;font-weight:600;letter-spacing:2px;outline:none;}
+.scan-row input:focus{border-color:var(--signal);}
+.scan-row input::placeholder{color:var(--muted);font-size:11px;letter-spacing:1px;}
+.btn-plus{background:var(--steel-light);border:none;border-radius:7px;padding:8px 14px;color:var(--ice);font-size:19px;cursor:pointer;transition:background .2s;}
+.btn-plus:hover{background:var(--signal);color:var(--navy);}
+.chips{display:flex;flex-wrap:wrap;gap:5px;min-height:28px;}
+.chip{display:flex;align-items:center;gap:4px;background:var(--navy);border:1px solid var(--ok);border-radius:5px;padding:3px 8px;font-family:'Courier New',monospace;font-size:12px;color:var(--ok);}
+.chip-x{background:none;border:none;color:var(--danger);cursor:pointer;font-size:12px;padding:0;}
+.scan-meta{font-size:11px;color:var(--muted);margin-top:6px;display:flex;justify-content:space-between;}
+.scan-meta strong{color:var(--signal);}
+
+/* SUMMARY BOX */
+.summary-box{background:var(--steel);border-radius:var(--radius);padding:10px 12px;font-size:12px;line-height:1.95;}
+.summary-box .row{display:flex;justify-content:space-between;}
+.summary-box .row strong{color:var(--ice);}
+.summary-box .row span{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;}
+
+/* BUTTONS */
+.btn-primary{width:100%;background:var(--signal);color:var(--navy);border:none;border-radius:var(--radius);padding:12px;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s,transform .1s;}
+.btn-primary:hover{background:var(--signal-dim);transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary:disabled{background:var(--steel);color:var(--muted);cursor:not-allowed;transform:none;}
+.btn-sec{background:var(--steel);border:none;border-radius:8px;padding:8px 16px;color:var(--ice);cursor:pointer;font-size:13px;}
+.btn-sig{background:var(--signal);border:none;border-radius:8px;padding:8px 16px;color:var(--navy);cursor:pointer;font-size:13px;font-weight:700;}
+.btn-icon{background:var(--steel-light);border:none;border-radius:6px;padding:5px 11px;color:var(--ice);font-size:12px;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.btn-icon:hover{background:var(--ok);color:var(--navy);}
+.btn-icon.warn:hover{background:var(--danger);color:#fff;}
+.btn-icon:disabled{background:var(--steel);color:var(--muted);cursor:not-allowed;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.stat-card{background:var(--navy-mid);border-radius:var(--radius);padding:12px 14px;border-left:3px solid var(--signal);}
+.stat-card.ok-b{border-left-color:var(--ok);}.stat-card.warn-b{border-left-color:var(--warn);}.stat-card.danger-b{border-left-color:var(--danger);}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:3px;}
+.stat-value{font-family:'Courier New',monospace;font-size:24px;font-weight:600;}
+.sv-n{color:var(--signal);}.sv-ok{color:var(--ok);}.sv-w{color:var(--warn);}.sv-d{color:var(--danger);}
+
+/* TABLE */
+.table-wrap{background:var(--navy-mid);border-radius:var(--radius);overflow:hidden;}
+.table-hdr{padding:12px 16px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--steel);}
+.table-hdr h3{font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;font-weight:600;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);}
+tbody tr{border-bottom:1px solid var(--steel);transition:background .15s;}
+tbody tr:hover{background:rgba(61,90,128,.3);}
+tbody td{padding:9px 12px;vertical-align:middle;}
+.td-mono{font-family:'Courier New',monospace;font-size:11px;color:var(--signal);}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;}
+.pill-active{background:rgba(46,204,113,.15);color:var(--ok);}
+.pill-late{background:rgba(231,76,60,.15);color:var(--danger);}
+.pill-warned{background:rgba(230,126,34,.15);color:var(--warn);}
+.pill-returned{background:rgba(42,63,95,.5);color:var(--muted);}
+.pill-partial{background:rgba(230,126,34,.15);color:var(--warn);}
+.cd{font-family:'Courier New',monospace;font-size:11px;}
+.cd-ok{color:var(--ok);}.cd-w{color:var(--warn);}.cd-d{color:var(--danger);}
+.empty-state{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+.empty-state div{font-size:28px;margin-bottom:7px;}
+
+/* RECEPCION CARDS */
+.recep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.recep-card{background:var(--navy-mid);border:1px solid var(--steel);border-radius:12px;overflow:hidden;transition:border-color .2s;}
+.recep-card:hover{border-color:var(--steel-light);}
+.recep-card.active-card{border-color:var(--ok);}
+.recep-card.late-card{border-color:var(--danger);}
+.recep-card.warned-card{border-color:var(--warn);}
+.recep-card.returned-card{border-color:var(--steel);opacity:.65;}
+.rc-head{padding:12px 14px;border-bottom:1px solid var(--steel);display:flex;justify-content:space-between;align-items:flex-start;}
+.rc-head-info strong{display:block;font-size:14px;}
+.rc-head-info span{font-size:11px;color:var(--muted);}
+.rc-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.rc-row{display:flex;justify-content:space-between;font-size:12px;}
+.rc-row span{color:var(--muted);}
+.rc-row strong{color:var(--ice);text-align:right;max-width:60%;}
+.rc-radios{font-family:'Courier New',monospace;font-size:11px;color:var(--signal);word-break:break-all;line-height:1.6;}
+.rc-footer{padding:10px 14px;border-top:1px solid var(--steel);display:flex;gap:7px;align-items:center;justify-content:flex-end;}
+.rc-countdown{font-family:'Courier New',monospace;font-size:12px;flex:1;}
+
+/* SCANNER PANEL (en recepción) */
+.scan-panel{background:var(--navy-mid);border:1px solid var(--steel);border-radius:12px;padding:18px;display:none;}
+.scan-panel.open{display:block;}
+.scan-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.scan-panel-header h3{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;}
+.scan-panel-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+.scan-panel-close:hover{color:var(--danger);}
+.expected-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+.exp-chip{background:var(--steel);border:1px solid var(--steel-light);border-radius:5px;padding:2px 8px;font-family:'Courier New',monospace;font-size:11px;color:var(--muted);}
+.exp-chip.done{border-color:var(--ok);color:var(--ok);background:rgba(46,204,113,.08);}
+.result-ok{background:rgba(46,204,113,.1);border:1px solid var(--ok);border-radius:9px;padding:16px;text-align:center;margin-top:12px;}
+.result-ok h3{font-family:'Segoe UI',system-ui,sans-serif;font-size:16px;color:var(--ok);margin:6px 0 4px;}
+.result-warn{background:rgba(231,76,60,.1);border:1px solid var(--danger);border-radius:9px;padding:14px;margin-top:12px;}
+.result-warn h3{font-family:'Segoe UI',system-ui,sans-serif;font-size:15px;color:var(--danger);margin:0 0 8px;text-align:center;}
+.missing-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+.missing-chip{background:rgba(231,76,60,.18);border:1px solid var(--danger);border-radius:5px;padding:2px 8px;font-family:'Courier New',monospace;font-size:11px;color:var(--danger);}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--navy-mid);border:1px solid var(--steel-light);border-radius:13px;padding:24px;width:90%;box-shadow:var(--shadow);}
+.modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:16px;}
+.modal h2{font-family:'Segoe UI',system-ui,sans-serif;margin-bottom:5px;}
+.modal p{color:var(--ice-mid);font-size:13px;margin-bottom:14px;}
+#emailModal .modal{max-width:500px;}
+#emailModal pre{background:var(--navy);border-radius:7px;padding:12px;font-family:'Courier New',monospace;font-size:11px;white-space:pre-wrap;max-height:200px;overflow-y:auto;color:var(--signal);margin-bottom:0;}
+.cfg-field{margin-bottom:10px;}
+.cfg-field label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.7px;}
+.cfg-field input{width:100%;background:var(--steel);border:1px solid var(--steel-light);border-radius:7px;color:var(--ice);padding:8px 12px;font-size:13px;font-family:system-ui,sans-serif;outline:none;}
+.cfg-field input:focus{border-color:var(--signal);}
+#configModal .modal{max-width:480px;}
+#tlAdminModal .modal{max-width:680px;max-height:88vh;display:flex;flex-direction:column;}
+#tlAdminModal > .modal > p{margin-bottom:14px;}
+.tl-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;overflow:hidden;}
+.tl-admin-col{display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+.tl-admin-col h4{font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:700;color:var(--signal);text-transform:uppercase;letter-spacing:1px;}
+.area-list,.tl-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.area-item{display:flex;align-items:center;justify-content:space-between;background:var(--steel);border-radius:6px;padding:8px 10px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;}
+.area-item:hover{background:var(--steel-light);}
+.area-item.selected{border-color:var(--signal);}
+.area-item span{font-size:13px;}.area-item small{font-size:11px;color:var(--muted);}
+.tl-item{display:flex;align-items:center;justify-content:space-between;background:var(--steel);border-radius:6px;padding:8px 10px;}
+.tl-item span{font-size:13px;}
+.del-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;opacity:.55;padding:0;}
+.del-btn:hover{opacity:1;}
+.add-row{display:flex;gap:5px;}
+.add-row input{flex:1;background:var(--navy);border:1px solid var(--steel-light);border-radius:6px;color:var(--ice);padding:7px 10px;font-size:13px;outline:none;}
+.add-row input:focus{border-color:var(--signal);}
+.add-row button{background:var(--signal);border:none;border-radius:6px;padding:7px 12px;color:var(--navy);font-weight:700;font-size:13px;cursor:pointer;}
+.placeholder-hint{font-size:12px;color:var(--muted);text-align:center;padding:16px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--ok);color:var(--navy);padding:10px 18px;border-radius:7px;font-weight:600;font-size:13px;z-index:400;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.danger{background:var(--danger);color:#fff;}
+
+
+/* ADMIN SUB-TABS */
+.admin-tab{padding:9px 18px;font-size:13px;font-family:'Segoe UI',system-ui,sans-serif;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;}
+.admin-tab:hover{color:var(--ice);}
+.admin-tab.active{color:var(--signal);border-bottom-color:var(--signal);}
+#csvDropZone.drag-over{border-color:var(--signal);background:rgba(245,197,24,.05);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">📻</div>
+    <div class="brand-text">
+      <h1>RadioControl</h1>
+      <span>Gestión de Radios por Turno</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="clock" id="clockDisplay">00:00:00</div>
+    <div class="shift-badge" id="shiftDisplay">Turno —</div>
+    <div id="syncBadge" style="background:rgba(46,204,113,.15);border:1px solid var(--ok);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--ok);">🟢 Sheets OK</div>
+    <button class="hdr-btn" onclick="openTLAdmin()">👥 Áreas y TLs</button>
+    <button class="hdr-btn" onclick="openConfigModal()">📧 Correos</button>
+  </div>
+</header>
+
+<div class="config-bar">
+  <label>Total de radios: <input type="number" id="totalRadios" value="20" min="1" max="500" onchange="updateConfig()"></label>
+  <label>Fin de turno:
+    <select id="shiftEnd" onchange="updateConfig()">
+      <option value="06:00">06:00 — Turno Nocturno</option>
+      <option value="15:30" selected>15:30 — Turno Matutino</option>
+      <option value="21:40">21:40 — Turno Vespertino</option>
+    </select>
+  </label>
+  <label>Holgura (min): <input type="number" id="graceMin" value="30" min="0" max="120" style="width:56px;" onchange="updateConfig()"></label>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-entrega" onclick="switchTab('entrega')">
+    📤 Entrega de radios
+  </button>
+  <button class="tab-btn" id="tab-recepcion" onclick="switchTab('recepcion')">
+    📥 Recepción / Devolución
+    <span class="tab-badge" id="tabBadge" style="display:none;">0</span>
+  </button>
+</div>
+
+<!-- ══════ TAB: ENTREGA ══════ -->
+<div class="tab-content active" id="tab-entrega-content">
+  <div class="entrega-layout">
+
+    <!-- FORM -->
+    <div class="panel-left">
+      <div>
+        <div class="section-title">👤 Datos del solicitante</div>
+        <div class="field">
+          <label>Nombre del solicitante</label>
+          <input type="text" id="requesterName" placeholder="Ej. Juan Pérez" oninput="updateSummary()">
+        </div>
+        <div class="field">
+          <label>Rol</label>
+          <select id="requesterRole" onchange="onRoleChange()">
+            <option value="rep">Representante / Operador</option>
+            <option value="tl">Team Leader (TL)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="tlSelectorSection">
+        <div class="section-title">🏷️ TL responsable</div>
+        <div class="field">
+          <label>Área</label>
+          <select id="areaSelect" onchange="onAreaChange()">
+            <option value="">— Selecciona un área —</option>
+          </select>
+        </div>
+        <div class="field" id="tlSelectField" style="display:none;">
+          <label>Team Leader</label>
+          <select id="tlSelect" onchange="onTLSelect()">
+            <option value="">— Selecciona un TL —</option>
+          </select>
+        </div>
+        <div id="tlSelectedCard" style="display:none;">
+          <div class="tl-card">
+            <div class="tl-card-info">
+              <strong id="tlCardName">—</strong>
+              <span id="tlCardArea">—</span>
+            </div>
+            <button class="tl-card-clear" onclick="clearTL()">✕</button>
+          </div>
+          <div class="sub-field">
+            <label>Correo del TL</label>
+            <input type="email" id="tlEmailInput" placeholder="tl@empresa.com (se carga del CSV automáticamente)">
+          </div>
+          <div class="sub-field">
+            <label>Correo jefe directo</label>
+            <input type="email" id="tlBossEmailInput" placeholder="jefe@empresa.com (se carga del CSV automáticamente)">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">📻 Escaneo de radios</div>
+        <div class="scanner-area">
+          <div class="scan-row">
+            <input type="text" id="scanInput" placeholder="Escanear o teclear # radio" maxlength="20"
+              onkeydown="if(event.key==='Enter') addRadio()">
+            <button class="btn-plus" onclick="addRadio()">＋</button>
+          </div>
+          <div class="chips" id="scannedChips"><span style="color:var(--muted);font-size:12px;">Sin radios escaneados</span></div>
+          <div class="scan-meta">
+            <span>Escaneados: <strong id="scanCountNum">0</strong></span>
+            <span>Disponibles: <strong id="maxAvail">20</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">📋 Resumen</div>
+        <div class="summary-box">
+          <div class="row"><span>Solicitante</span><strong id="sumName">—</strong></div>
+          <div class="row"><span>Rol</span><strong id="sumRole">—</strong></div>
+          <div class="row"><span>TL responsable</span><strong id="sumTL">—</strong></div>
+          <div class="row"><span>Área</span><strong id="sumArea">—</strong></div>
+          <div class="row"><span>Radios</span><strong id="sumCount">0</strong></div>
+          <div class="row"><span>Devolver antes de</span><strong id="sumDeadline" style="color:var(--signal)">—</strong></div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="registerDelivery()">📤 Registrar entrega y enviar correo</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="panel-right">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value sv-n" id="statTotal">20</div></div>
+        <div class="stat-card ok-b"><div class="stat-label">Disponibles</div><div class="stat-value sv-ok" id="statAvail">20</div></div>
+        <div class="stat-card warn-b"><div class="stat-label">En uso</div><div class="stat-value sv-w" id="statInUse">0</div></div>
+        <div class="stat-card danger-b"><div class="stat-label">Vencidos</div><div class="stat-value sv-d" id="statLate">0</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-hdr">
+          <h3>📋 Registros del turno</h3>
+          <span style="font-size:11px;color:var(--muted);" id="recordCount">0 registros</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Solicitante</th><th>TL / Área</th><th>Radios</th><th>Estado</th><th>Tiempo</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody">
+            <tr><td colspan="6"><div class="empty-state"><div>📻</div>Sin registros</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ TAB: RECEPCIÓN ══════ -->
+<div class="tab-content" id="tab-recepcion-content">
+  <div class="recepcion-layout">
+
+    <!-- PANEL DE ESCANEO ACTIVO -->
+    <div class="scan-panel" id="recepScanPanel">
+      <div class="scan-panel-header">
+        <h3 id="recepPanelTitle">📥 Registrar devolución</h3>
+        <button class="scan-panel-close" onclick="closeScanPanel()">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Escanea los radios que se devuelven. Los que ya fueron escaneados se marcan en verde.</div>
+      <div id="recepExpected" class="expected-chips"></div>
+      <div class="scan-row" style="margin-bottom:8px;">
+        <input type="text" id="recepScanInput" placeholder="Escanear # radio" maxlength="20"
+          onkeydown="if(event.key==='Enter') addRecepRadio()">
+        <button class="btn-plus" onclick="addRecepRadio()">＋</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;" id="recepMeta">Devueltos: 0 / 0</div>
+      <div id="recepResult"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;" id="recepActions">
+        <button class="btn-sec" onclick="closeScanPanel()">Cancelar</button>
+        <button class="btn-sig" onclick="confirmRecepReturn()">✔ Confirmar devolución</button>
+      </div>
+    </div>
+
+    <!-- GRID DE TARJETAS -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div>
+          <div class="section-title" style="margin-bottom:2px;">📥 Radios en campo — pendientes de devolución</div>
+          <span style="font-size:11px;color:var(--muted);">Selecciona un registro para iniciar la devolución</span>
+        </div>
+        <select id="recepFilter" onchange="renderRecepCards()" style="background:var(--steel);border:1px solid var(--steel-light);border-radius:7px;color:var(--ice);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
+          <option value="active">Solo activos</option>
+          <option value="all">Todos</option>
+        </select>
+      </div>
+      <div class="recep-grid" id="recepGrid">
+        <div class="empty-state" style="grid-column:1/-1;"><div>📻</div>Sin registros activos</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ EMAIL MODAL ══════ -->
+<div class="modal-overlay" id="emailModal">
+  <div class="modal">
+    <h2 id="emailModalTitle">📧 Correo generado</h2>
+    <p>Revisa y abre en tu cliente de correo.</p>
+    <pre id="emailContent"></pre>
+    <div class="modal-actions">
+      <button class="btn-sec" onclick="closeEmailModal()">Cerrar</button>
+      <button class="btn-sec" onclick="copyEmail()">📋 Copiar</button>
+      <button class="btn-sig" onclick="openMailto()">📨 Abrir en Gmail</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ CONFIG MODAL ══════ -->
+<div class="modal-overlay" id="configModal">
+  <div class="modal" style="max-width:460px;">
+    <h2>📧 Configuración de correos</h2>
+    <p>Destinatarios para notificaciones automáticas.</p>
+    <div class="cfg-field"><label>Jefe inmediato del TL</label><input type="email" id="cfgBoss" placeholder="jefe@empresa.com"></div>
+    <div class="cfg-field"><label>Supervisor turno siguiente</label><input type="email" id="cfgNextSup" placeholder="supervisor@empresa.com"></div>
+    <div class="cfg-field"><label>CC adicional</label><input type="email" id="cfgCC" placeholder="otro@empresa.com"></div>
+    <div class="modal-actions"><button class="btn-sec" onclick="closeConfigModal()">Cancelar</button><button class="btn-sig" onclick="saveConfig()">Guardar</button></div>
+  </div>
+</div>
+
+<!-- ══════ TL ADMIN MODAL ══════ -->
+<div class="modal-overlay" id="tlAdminModal">
+  <div class="modal" style="max-width:720px;max-height:90vh;display:flex;flex-direction:column;">
+    <h2 style="font-family:'Segoe UI',system-ui,sans-serif;margin-bottom:4px;">👥 Áreas y Team Leaders</h2>
+
+    <!-- SUB-TABS -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--steel);margin-bottom:16px;">
+      <button class="admin-tab active" id="atab-manual" onclick="switchAdminTab('manual')">✏️ Registro manual</button>
+      <button class="admin-tab" id="atab-csv" onclick="switchAdminTab('csv')">📂 Importar CSV</button>
+    </div>
+
+    <!-- MANUAL TAB -->
+    <div id="adminTab-manual" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <p style="color:var(--ice-mid);font-size:12px;margin-bottom:12px;">Agrega áreas y TLs uno por uno. Todo ordenado alfabéticamente.</p>
+      <div class="tl-admin-grid" style="flex:1;overflow:hidden;">
+        <div class="tl-admin-col">
+          <h4>📂 Áreas</h4>
+          <div class="add-row"><input type="text" id="newAreaInput" placeholder="Nueva área" maxlength="40" onkeydown="if(event.key==='Enter') addArea()"><button onclick="addArea()">＋</button></div>
+          <div class="area-list" id="areaList"></div>
+        </div>
+        <div class="tl-admin-col">
+          <h4>👤 TLs — <span id="adminSelArea" style="color:var(--ice-mid);font-weight:400;font-size:11px;">selecciona área</span></h4>
+          <div class="add-row" id="addTLRow" style="display:none;">
+            <input type="text" id="newTLInput" placeholder="Nombre del TL" maxlength="60" onkeydown="if(event.key==='Enter') addTL()">
+            <button onclick="addTL()">＋</button>
+          </div>
+          <div style="display:none;" id="addTLEmailRow">
+            <input type="email" id="newTLEmailInput" placeholder="Correo del TL (opcional)" style="width:100%;background:var(--navy);border:1px solid var(--steel-light);border-radius:6px;color:var(--ice);padding:6px 10px;font-size:12px;margin-bottom:5px;outline:none;">
+            <input type="email" id="newTLBossInput" placeholder="Correo jefe directo (opcional)" style="width:100%;background:var(--navy);border:1px solid var(--steel-light);border-radius:6px;color:var(--ice);padding:6px 10px;font-size:12px;outline:none;">
+          </div>
+          <div class="tl-list" id="adminTLList"><div class="placeholder-hint">← Selecciona un área</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CSV TAB -->
+    <div id="adminTab-csv" style="display:none;flex-direction:column;gap:14px;flex:1;overflow:hidden;">
+      <div style="background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.3);border-radius:9px;padding:14px 16px;font-size:12px;line-height:1.8;">
+        <strong style="color:var(--signal);">Formato requerido del CSV (con encabezados):</strong><br>
+        <code style="font-family:'Courier New',monospace;font-size:11px;color:var(--ice-mid);">Area,Nombre TL,Correo TL,Correo Jefe</code><br>
+        <span style="color:var(--muted);">Ejemplo: <code style="font-family:'Courier New',monospace;">Inbound,María García,maria@emp.com,jefe@emp.com</code></span><br>
+        <span style="color:var(--muted);">• Las áreas se crean automáticamente &nbsp;• Los correos son opcionales &nbsp;• Se ignoran filas vacías</span>
+      </div>
+
+      <!-- DOWNLOAD TEMPLATE -->
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn-sec" onclick="downloadTemplate()" style="font-size:12px;">⬇️ Descargar plantilla CSV</button>
+        <span style="font-size:11px;color:var(--muted);">Llénala en Excel o Google Sheets y cárgala aquí</span>
+      </div>
+
+      <!-- DROP ZONE -->
+      <div id="csvDropZone"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleCSVDrop(event)"
+        onclick="document.getElementById('csvFileInput').click()"
+        style="border:2px dashed var(--steel-light);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;">
+        <div style="font-size:32px;margin-bottom:8px;">📂</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Arrastra tu CSV aquí</div>
+        <div style="font-size:12px;color:var(--muted);">o haz clic para seleccionar archivo</div>
+        <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;" onchange="handleCSVFile(this.files[0])">
+      </div>
+
+      <!-- PREVIEW -->
+      <div id="csvPreview" style="display:none;flex:1;overflow:hidden;display:none;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;font-weight:600;" id="csvPreviewTitle">Vista previa</span>
+          <div style="display:flex;gap:7px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);cursor:pointer;">
+              <input type="checkbox" id="csvMerge" checked style="accent-color:var(--signal);"> Mantener TLs existentes
+            </label>
+            <button class="btn-sec" onclick="clearCSVPreview()" style="font-size:12px;">✕ Cancelar</button>
+            <button class="btn-sig" onclick="confirmCSVImport()" style="font-size:12px;">✅ Importar</button>
+          </div>
+        </div>
+        <div style="overflow-y:auto;max-height:220px;border-radius:8px;border:1px solid var(--steel);">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="background:var(--steel);">
+                <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Área</th>
+                <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Nombre TL</th>
+                <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Correo TL</th>
+                <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Correo Jefe</th>
+                <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="csvPreviewBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="border-top:1px solid var(--steel);padding-top:14px;margin-top:10px;">
+      <button class="btn-sig" onclick="closeTLAdmin()">Listo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let config = { totalRadios:20, shiftEnd:'15:30', graceMin:30, bossEmail:'', nextSupEmail:'', ccEmail:'' };
+let areas = {}, records = [], scannedRadios = [];
+let selectedArea='', selectedTL='';
+let adminSelectedArea='';
+let recepCurrentId=null, recepReturned=[];
+let currentEmail='';
+
+// ══════════════════════════════════════════════
+// GOOGLE SHEETS API
+// ══════════════════════════════════════════════
+const GS_URL = '/api/sheets';
+
+// GET via proxy (no CORS issues)
+async function gsGet(action) {
+  try {
+    const r = await fetch(`${GS_URL}?action=${action}`);
+    const data = await r.json();
+    setSyncBadge(true);
+    return data;
+  } catch(e) { setSyncBadge(false); console.warn('gsGet error:', e); return null; }
+}
+// POST via proxy
+async function gsPost(data) {
+  try {
+    const r = await fetch(GS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const res = await r.json();
+    setSyncBadge(true);
+    return res;
+  } catch(e) { setSyncBadge(false); console.warn('gsPost error:', e); return null; }
+}
+function setSyncBadge(ok) {
+  const b = document.getElementById('syncBadge');
+  if (!b) return;
+  if (ok) { b.style.background='rgba(46,204,113,.15)';b.style.borderColor='var(--ok)';b.style.color='var(--ok)';b.textContent='🟢 Sheets OK'; }
+  else     { b.style.background='rgba(231,76,60,.15)';b.style.borderColor='var(--danger)';b.style.color='var(--danger)';b.textContent='🔴 Sin conexión'; }
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+async function init() {
+  showLoader(true);
+  await loadFromSheets();
+  showLoader(false);
+  updateClock();
+  setInterval(updateClock, 1000);
+  setInterval(checkDeadlines, 30000);
+  setInterval(syncFromSheets, 15000); // auto-sync every 15s
+  renderAreaSelect(); renderRecords(); renderRecepCards(); updateStats(); updateSummary();
+}
+
+function showLoader(on) {
+  let el = document.getElementById('loader');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loader';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(15,27,45,.85);z-index:500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
+    el.innerHTML = '<div style="font-size:32px;">📻</div><div style="color:#F5C518;font-size:14px;font-weight:600;">Conectando con Google Sheets...</div><div style="color:#8899AA;font-size:12px;">Cargando datos compartidos</div>';
+    document.body.appendChild(el);
+  }
+  el.style.display = on ? 'flex' : 'none';
+}
+
+async function loadFromSheets() {
+  try {
+    const [recRes, cfgRes] = await Promise.all([
+      gsGet('getRecords'),
+      gsGet('getConfig')
+    ]);
+    if (recRes && recRes.records) records = recRes.records;
+    if (cfgRes && cfgRes.config) {
+      if (cfgRes.config.appConfig) config = {...config, ...cfgRes.config.appConfig};
+      if (cfgRes.config.areas) areas = cfgRes.config.areas;
+    }
+    document.getElementById('totalRadios').value = config.totalRadios;
+    document.getElementById('shiftEnd').value    = config.shiftEnd;
+    document.getElementById('graceMin').value    = config.graceMin;
+    document.getElementById('cfgNextSup').value  = config.nextSupEmail||'';
+    document.getElementById('cfgCC').value       = config.ccEmail||'';
+    document.getElementById('statTotal').textContent = config.totalRadios;
+  } catch(e) { console.warn('loadFromSheets error:', e); }
+}
+
+async function syncFromSheets() {
+  try {
+    const res = await gsGet('getRecords');
+    if (res && res.records) {
+      records = res.records;
+      renderRecords(); renderRecepCards(); updateStats();
+    }
+  } catch(e) {}
+}
+
+async function save() {
+  // Save to Sheets in background (non-blocking)
+  gsPost({ action:'saveRecords', records }).catch(()=>{});
+  gsPost({ action:'saveConfig', config:{ appConfig: config } }).catch(()=>{});
+}
+
+async function saveAreas() {
+  gsPost({ action:'saveAreas', areas }).catch(()=>{});
+}
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function switchTab(t) {
+  ['entrega','recepcion'].forEach(tab => {
+    document.getElementById(`tab-${tab}`).classList.toggle('active', tab===t);
+    document.getElementById(`tab-${tab}-content`).classList.toggle('active', tab===t);
+  });
+  if (t==='recepcion') renderRecepCards();
+}
+
+// ══════════════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent = now.toLocaleTimeString('es-MX',{hour12:false});
+  const h = now.getHours();
+  document.getElementById('shiftDisplay').textContent = `Turno ${h<6?'Nocturno':h<14?'Matutino':h<22?'Vespertino':'Nocturno'}`;
+  updateCountdowns();
+}
+
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+function updateConfig() {
+  config.totalRadios = parseInt(document.getElementById('totalRadios').value)||20;
+  config.shiftEnd    = document.getElementById('shiftEnd').value;
+  config.graceMin    = parseInt(document.getElementById('graceMin').value)||30;
+  updateStats(); updateSummary(); save();
+}
+function openConfigModal(){document.getElementById('cfgBoss').value=config.bossEmail;document.getElementById('cfgNextSup').value=config.nextSupEmail;document.getElementById('cfgCC').value=config.ccEmail;document.getElementById('configModal').classList.add('active');}
+function closeConfigModal(){document.getElementById('configModal').classList.remove('active');}
+function saveConfig(){config.bossEmail=document.getElementById('cfgBoss').value.trim();config.nextSupEmail=document.getElementById('cfgNextSup').value.trim();config.ccEmail=document.getElementById('cfgCC').value.trim();save();closeConfigModal();showToast('✅ Configuración guardada');}
+
+function getDeadline() {
+  if (!config.shiftEnd) return null;
+  const [h,m] = config.shiftEnd.split(':').map(Number);
+  const d = new Date(); d.setHours(h,m+config.graceMin,0,0);
+  if (d < new Date()) d.setDate(d.getDate()+1);
+  return d;
+}
+
+// ══════════════════════════════════════════════
+// ROLE / TL
+// ══════════════════════════════════════════════
+function onRoleChange(){
+  const isTL=document.getElementById('requesterRole').value==='tl';
+  document.getElementById('tlSelectorSection').style.display=isTL?'none':'block';
+  if(isTL){selectedArea='';selectedTL='';}
+  updateSummary();
+}
+function renderAreaSelect(){
+  const sel=document.getElementById('areaSelect');
+  const sorted=Object.keys(areas).sort((a,b)=>a.localeCompare(b,'es'));
+  sel.innerHTML='<option value="">— Selecciona un área —</option>'+sorted.map(a=>`<option value="${esc(a)}">${esc(a)} (${areas[a].length} TL${areas[a].length!==1?'s':''})</option>`).join('');
+  if(selectedArea) sel.value=selectedArea;
+}
+function onAreaChange(){
+  selectedArea=document.getElementById('areaSelect').value; selectedTL='';
+  document.getElementById('tlSelectedCard').style.display='none';
+  const tf=document.getElementById('tlSelectField');
+  if(!selectedArea){tf.style.display='none';updateSummary();return;}
+  const sel=document.getElementById('tlSelect');
+  const tls=(areas[selectedArea]||[]).slice().sort((a,b)=>{
+    const na=typeof a==='object'?a.name:a; const nb=typeof b==='object'?b.name:b;
+    return na.localeCompare(nb,'es');
+  });
+  sel.innerHTML='<option value="">— Selecciona un TL —</option>'+tls.map(t=>{
+    const n=typeof t==='object'?t.name:t;
+    return `<option value="${esc(n)}">${esc(n)}</option>`;
+  }).join('');
+  tf.style.display='block'; sel.value=''; updateSummary();
+}
+function onTLSelect(){
+  selectedTL=document.getElementById('tlSelect').value; if(!selectedTL) return;
+  // Find TL object to auto-fill emails
+  const tlObj=(areas[selectedArea]||[]).find(t=>(typeof t==='object'?t.name:t)===selectedTL);
+  const tlEmail=typeof tlObj==='object'?(tlObj.email||''):'';
+  const bossEmail=typeof tlObj==='object'?(tlObj.boss||''):'';
+  document.getElementById('tlCardName').textContent=selectedTL;
+  document.getElementById('tlCardArea').textContent=selectedArea;
+  document.getElementById('tlEmailInput').value=tlEmail;
+  document.getElementById('tlBossEmailInput').value=bossEmail;
+  document.getElementById('tlSelectedCard').style.display='block';
+  document.getElementById('tlSelectField').style.display='none';
+  document.getElementById('areaSelect').style.display='none';
+  updateSummary();
+}
+function clearTL(){
+  selectedTL='';selectedArea='';
+  document.getElementById('tlSelectedCard').style.display='none';
+  document.getElementById('tlSelectField').style.display='none';
+  document.getElementById('areaSelect').style.display='block';
+  document.getElementById('areaSelect').value='';
+  updateSummary();
+}
+
+// ══════════════════════════════════════════════
+// SCANNER (entrega)
+// ══════════════════════════════════════════════
+function addRadio(){
+  const inp=document.getElementById('scanInput'); const val=inp.value.trim().toUpperCase(); if(!val) return;
+  if(scannedRadios.includes(val)){showToast('⚠️ Radio ya escaneado',true);inp.value='';return;}
+  const inUse=records.filter(r=>r.status!=='returned').reduce((s,r)=>s+r.radios.length,0);
+  if(scannedRadios.length+inUse>=config.totalRadios){showToast('⚠️ No hay radios disponibles',true);return;}
+  scannedRadios.push(val); inp.value=''; renderChips(); updateSummary(); updateStats(); inp.focus();
+}
+function removeRadio(v){scannedRadios=scannedRadios.filter(r=>r!==v);renderChips();updateSummary();updateStats();}
+function renderChips(){
+  const c=document.getElementById('scannedChips');
+  document.getElementById('scanCountNum').textContent=scannedRadios.length;
+  if(!scannedRadios.length){c.innerHTML='<span style="color:var(--muted);font-size:12px;">Sin radios escaneados</span>';return;}
+  c.innerHTML=scannedRadios.map(r=>`<div class="chip">📻 ${esc(r)}<button class="chip-x" onclick="removeRadio('${esc(r)}')">✕</button></div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// SUMMARY
+// ══════════════════════════════════════════════
+function updateSummary(){
+  const name=document.getElementById('requesterName').value.trim()||'—';
+  const isTL=document.getElementById('requesterRole').value==='tl';
+  document.getElementById('sumName').textContent=name;
+  document.getElementById('sumRole').textContent=isTL?'Team Leader':'Representante';
+  document.getElementById('sumTL').textContent=isTL?name:(selectedTL||'—');
+  document.getElementById('sumArea').textContent=isTL?'—':(selectedArea||'—');
+  document.getElementById('sumCount').textContent=scannedRadios.length;
+  const dl=getDeadline();
+  document.getElementById('sumDeadline').textContent=dl?dl.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):'—';
+  const inUse=records.filter(r=>r.status!=='returned').reduce((s,r)=>s+r.radios.length,0);
+  document.getElementById('maxAvail').textContent=Math.max(0,config.totalRadios-inUse-scannedRadios.length);
+}
+function updateStats(){
+  const inUse=records.filter(r=>r.status!=='returned').reduce((s,r)=>s+r.radios.length,0);
+  const late=records.filter(r=>r.status==='late'||r.status==='warned').reduce((s,r)=>s+r.radios.length,0);
+  document.getElementById('statTotal').textContent=config.totalRadios;
+  document.getElementById('statAvail').textContent=Math.max(0,config.totalRadios-inUse-scannedRadios.length);
+  document.getElementById('statInUse').textContent=inUse;
+  document.getElementById('statLate').textContent=late;
+  // Tab badge
+  const activeCount=records.filter(r=>r.status!=='returned').length;
+  const badge=document.getElementById('tabBadge');
+  if(activeCount>0){badge.textContent=activeCount;badge.style.display='inline-block';badge.className='tab-badge'+(late>0?'':' ok');}
+  else{badge.style.display='none';}
+}
+
+// ══════════════════════════════════════════════
+// DELIVERY + RECIBO
+// ══════════════════════════════════════════════
+function registerDelivery(){
+  const name=document.getElementById('requesterName').value.trim();
+  const isTL=document.getElementById('requesterRole').value==='tl';
+  const tl=isTL?name:selectedTL;
+  const area=isTL?'TL directo':selectedArea;
+  const tlEmail=isTL?'':(document.getElementById('tlEmailInput')?.value?.trim()||'');
+  const tlBossEmail=isTL?'':(document.getElementById('tlBossEmailInput')?.value?.trim()||'');
+  if(!name){showToast('⚠️ Ingresa el nombre del solicitante',true);return;}
+  if(!isTL&&!selectedTL){showToast('⚠️ Selecciona el TL responsable',true);return;}
+  if(!scannedRadios.length){showToast('⚠️ Escanea al menos un radio',true);return;}
+  const dl=getDeadline();
+  const rec={
+    id:Date.now().toString(), folio:'RC-'+Date.now().toString().slice(-6),
+    requester:name, role:isTL?'tl':'rep', tl, area, tlEmail, tlBossEmail,
+    radios:[...scannedRadios],
+    deliveredAt:new Date().toISOString(),
+    deadline:dl?dl.toISOString():null,
+    status:'active', alerted:false, warned:false, returnedRadios:[], missingRadios:[]
+  };
+  records.push(rec); save();
+
+  // Reset form
+  scannedRadios=[]; renderChips();
+  document.getElementById('requesterName').value='';
+  clearTL(); renderAreaSelect(); updateSummary(); renderRecords(); renderRecepCards(); updateStats();
+
+  // Show email directly
+  showEmailModal('📤 Correo de entrega — ' + rec.folio, generateDeliveryEmail(rec));
+}
+
+
+
+// ══════════════════════════════════════════════
+// RECEPCIÓN / DEVOLUCIÓN
+// ══════════════════════════════════════════════
+function openScanPanel(id){
+  recepCurrentId=id; recepReturned=[];
+  const rec=records.find(r=>r.id===id); if(!rec) return;
+  document.getElementById('recepPanelTitle').textContent=`📥 Devolución — ${rec.requester} | TL: ${rec.tl}`;
+  document.getElementById('recepScanInput').value='';
+  document.getElementById('recepMeta').textContent=`Devueltos: 0 / ${rec.radios.length}`;
+  document.getElementById('recepResult').innerHTML='';
+  document.getElementById('recepActions').style.display='flex';
+  renderExpected(rec);
+  const panel=document.getElementById('recepScanPanel');
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>document.getElementById('recepScanInput').focus(),300);
+}
+function closeScanPanel(){ document.getElementById('recepScanPanel').classList.remove('open'); recepCurrentId=null; recepReturned=[]; }
+
+function renderExpected(rec){
+  document.getElementById('recepExpected').innerHTML=rec.radios.map(r=>
+    `<span class="exp-chip${recepReturned.includes(r)?' done':''}" id="exp-${esc(r)}">📻 ${esc(r)}</span>`
+  ).join('');
+}
+
+function addRecepRadio(){
+  const rec=records.find(r=>r.id===recepCurrentId); if(!rec) return;
+  const inp=document.getElementById('recepScanInput'); const val=inp.value.trim().toUpperCase(); if(!val) return;
+  if(recepReturned.includes(val)){showToast('⚠️ Ya escaneado',true);inp.value='';return;}
+  if(!rec.radios.includes(val)){showToast(`⚠️ Radio ${val} no pertenece a este registro`,true);inp.value='';return;}
+  recepReturned.push(val); inp.value='';
+  renderExpected(rec);
+  document.getElementById('recepMeta').textContent=`Devueltos: ${recepReturned.length} / ${rec.radios.length}`;
+  inp.focus();
+}
+
+function confirmRecepReturn(){
+  const rec=records.find(r=>r.id===recepCurrentId); if(!rec) return;
+  if(!recepReturned.length){showToast('⚠️ Escanea al menos un radio',true);return;}
+  const missing=rec.radios.filter(r=>!recepReturned.includes(r));
+  const complete=missing.length===0;
+  rec.returnedRadios=[...recepReturned]; rec.missingRadios=missing;
+  rec.status='returned'; rec.returnedAt=new Date().toISOString();
+  save();
+
+  // Show result in panel
+  document.getElementById('recepActions').style.display='none';
+  if(complete){
+    document.getElementById('recepResult').innerHTML=`<div class="result-ok"><div style="font-size:36px;">🎉</div><h3>¡Todos los radios devueltos!</h3><p style="font-size:13px;color:var(--ice-mid);">${rec.radios.length} radios devueltos correctamente. ¡Buen turno, ${esc(rec.tl)}!</p></div>`;
+  } else {
+    document.getElementById('recepResult').innerHTML=`<div class="result-warn">
+      <div class="big-icon" style="text-align:center;font-size:32px;">🚨</div>
+      <h3>Faltan ${missing.length} radio${missing.length!==1?'s':''}</h3>
+      <div class="missing-chips">${missing.map(r=>`<div class="missing-chip">📻 ${esc(r)}</div>`).join('')}</div>
+      <p style="font-size:12px;color:var(--ice-mid);">Se devuelven ${recepReturned.length} de ${rec.radios.length}. El correo de faltantes se enviará al vencer la holgura.</p>
+    </div>`;
+  }
+
+  renderRecords(); renderRecepCards(); updateStats();
+
+  setTimeout(()=>{
+    closeScanPanel();
+    showEmailModal(
+      complete ? '✅ Correo de devolución completa — ' + rec.folio : '⚠️ Correo de devolución parcial — ' + rec.folio,
+      generateReturnEmail(rec, complete, missing)
+    );
+  }, 1600);
+}
+
+// ══════════════════════════════════════════════
+// DEADLINES
+// ══════════════════════════════════════════════
+function checkDeadlines(){
+  const now=new Date();
+  records.forEach(rec=>{
+    if(rec.status==='returned'||!rec.deadline) return;
+    const dl=new Date(rec.deadline); const diff=(dl-now)/60000;
+    if(diff<=15&&diff>0&&!rec.warned){rec.warned=true;rec.status='warned';save();showToast(`⚠️ ${rec.tl}: ${Math.ceil(diff)} min para devolver radios`,true);}
+    if(now>dl&&!rec.alerted){
+      rec.status='late';rec.alerted=true;save();
+      const missing=rec.radios.filter(r=>!(rec.returnedRadios||[]).includes(r));
+      showEmailModal('🚨 Alerta: Radios no devueltos',generateAlertEmail(rec,missing));
+    }
+  });
+  renderRecords(); renderRecepCards(); updateStats();
+}
+function updateCountdowns(){
+  const now=new Date(); let changed=false;
+  records.forEach(rec=>{
+    if(rec.status==='returned'||!rec.deadline) return;
+    const dl=new Date(rec.deadline);
+    if(now>dl&&!rec.alerted){rec.status='late';rec.alerted=true;changed=true;}
+  });
+  if(changed) save();
+  renderRecords(); renderRecepCards();
+}
+
+// ══════════════════════════════════════════════
+// RENDER RECORDS (tabla entrega)
+// ══════════════════════════════════════════════
+function renderRecords(){
+  const tbody=document.getElementById('recordsBody');
+  const active=records.filter(r=>r.status!=='returned');
+  const done=records.filter(r=>r.status==='returned');
+  const all=[...active,...done];
+  document.getElementById('recordCount').textContent=`${active.length} activo${active.length!==1?'s':''}`;
+  if(!all.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><div>📻</div>Sin registros</div></td></tr>';return;}
+  const now=new Date();
+  tbody.innerHTML=all.map(rec=>{
+    const dl=rec.deadline?new Date(rec.deadline):null;
+    const diff=dl?(dl-now)/60000:null;
+    let st='',cd='',ac='';
+    if(rec.status==='returned'){
+      const hasMiss=rec.missingRadios&&rec.missingRadios.length>0;
+      st=hasMiss?`<span class="pill pill-partial">Parcial</span>`:`<span class="pill pill-returned">Devuelto</span>`;
+      const rt=rec.returnedAt?new Date(rec.returnedAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}):'';
+      cd=`<span style="color:var(--muted);font-size:11px;">${rt}</span>`;
+      ac=`<button class="btn-icon" onclick="resendEmail('${rec.id}')">📧 Reenviar</button>`;
+    } else if(rec.status==='late'){
+      const over=dl?Math.floor((now-dl)/60000):0;
+      st='<span class="pill pill-late">Vencido</span>'; cd=`<span class="cd cd-d">+${over}m</span>`;
+      ac=`<button class="btn-icon" onclick="switchTab('recepcion');openScanPanel('${rec.id}')">📥 Devolver</button>`;
+    } else if(rec.status==='warned'){
+      const mins=diff!==null?Math.ceil(diff):'?';
+      st='<span class="pill pill-warned">Por vencer</span>'; cd=`<span class="cd cd-w">${mins}m</span>`;
+      ac=`<button class="btn-icon" onclick="switchTab('recepcion');openScanPanel('${rec.id}')">📥 Devolver</button>`;
+    } else {
+      const mins=diff!==null?Math.ceil(diff):'?';
+      const c=diff!==null?(diff<30?'cd-w':'cd-ok'):'cd-ok';
+      st='<span class="pill pill-active">Activo</span>'; cd=`<span class="cd ${c}">${mins}m</span>`;
+      ac=`<button class="btn-icon" onclick="switchTab('recepcion');openScanPanel('${rec.id}')">📥 Devolver</button>`;
+    }
+    const t=new Date(rec.deliveredAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    return `<tr>
+      <td><strong>${esc(rec.requester)}</strong><br><span style="font-size:10px;color:var(--muted);">${rec.role==='tl'?'TL':'Rep'} · ${t}</span></td>
+      <td><strong>${esc(rec.tl)}</strong><br><span style="font-size:10px;color:var(--muted);">${esc(rec.area)}</span></td>
+      <td class="td-mono">${esc(rec.radios.join(' '))} <span style="color:var(--muted);font-size:10px;">(${rec.radios.length})</span></td>
+      <td>${st}</td><td>${cd}</td><td>${ac}</td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// RENDER RECEPCIÓN CARDS
+// ══════════════════════════════════════════════
+function renderRecepCards(){
+  const grid=document.getElementById('recepGrid');
+  const filter=document.getElementById('recepFilter').value;
+  let list= filter==='all' ? records : records.filter(r=>r.status!=='returned');
+  list=[...list].sort((a,b)=>{
+    const order={late:0,warned:1,active:2,returned:3};
+    return (order[a.status]||3)-(order[b.status]||3);
+  });
+  if(!list.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1;"><div>✅</div>Sin registros pendientes</div>';return;}
+  const now=new Date();
+  grid.innerHTML=list.map(rec=>{
+    const dl=rec.deadline?new Date(rec.deadline):null;
+    const diff=dl?(dl-now)/60000:null;
+    let cardCls='recep-card', stHtml='', cdHtml='', footerBtn='';
+    if(rec.status==='returned'){
+      const hasMiss=rec.missingRadios&&rec.missingRadios.length>0;
+      cardCls+=' returned-card';
+      stHtml=hasMiss?`<span class="pill pill-partial">Parcial</span>`:`<span class="pill pill-returned">✅ Devuelto</span>`;
+      cdHtml=rec.returnedAt?`<span style="font-size:11px;color:var(--muted);">Devuelto ${new Date(rec.returnedAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</span>`:'';
+      footerBtn=`<button class="btn-icon" onclick="resendEmail('${rec.id}')">📧 Reenviar correo</button>`;
+    } else if(rec.status==='late'){
+      const over=dl?Math.floor((now-dl)/60000):0;
+      cardCls+=' late-card'; stHtml='<span class="pill pill-late">⚠ Vencido</span>';
+      cdHtml=`<span class="cd cd-d" style="font-size:13px;">+${over} min vencido</span>`;
+      footerBtn=`<button class="btn-icon" style="background:var(--danger);color:#fff;" onclick="openScanPanel('${rec.id}')">📥 Registrar devolución</button>`;
+    } else if(rec.status==='warned'){
+      const mins=diff!==null?Math.ceil(diff):'?';
+      cardCls+=' warned-card'; stHtml='<span class="pill pill-warned">⏰ Por vencer</span>';
+      cdHtml=`<span class="cd cd-w" style="font-size:13px;">${mins} min restantes</span>`;
+      footerBtn=`<button class="btn-icon" onclick="openScanPanel('${rec.id}')">📥 Registrar devolución</button>`;
+    } else {
+      const mins=diff!==null?Math.ceil(diff):'?';
+      const c=diff!==null?(diff<30?'cd-w':'cd-ok'):'cd-ok';
+      cardCls+=' active-card'; stHtml='<span class="pill pill-active">Activo</span>';
+      cdHtml=`<span class="cd ${c}" style="font-size:13px;">${mins} min restantes</span>`;
+      footerBtn=`<button class="btn-icon" onclick="openScanPanel('${rec.id}')">📥 Registrar devolución</button>`;
+    }
+    const delivTime=new Date(rec.deliveredAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    const dlTime=dl?dl.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}):'—';
+    return `<div class="${cardCls}">
+      <div class="rc-head">
+        <div class="rc-head-info">
+          <strong>${esc(rec.requester)}</strong>
+          <span>${rec.role==='tl'?'Team Leader':'Representante'} · ${delivTime}</span>
+        </div>
+        ${stHtml}
+      </div>
+      <div class="rc-body">
+        <div class="rc-row"><span>TL responsable</span><strong>${esc(rec.tl)}</strong></div>
+        <div class="rc-row"><span>Área</span><strong>${esc(rec.area)}</strong></div>
+        <div class="rc-row"><span>Folio</span><strong style="font-family:'Courier New',monospace;font-size:11px;">${esc(rec.folio)}</strong></div>
+        <div class="rc-row"><span>Devolver antes de</span><strong style="color:var(--signal);">${dlTime}</strong></div>
+        <div class="rc-row"><span>Radios (${rec.radios.length})</span></div>
+        <div class="rc-radios">${esc(rec.radios.join('  '))}</div>
+        ${rec.missingRadios&&rec.missingRadios.length?`<div class="rc-row"><span style="color:var(--danger);">Faltantes</span><strong style="color:var(--danger);">${rec.missingRadios.join(', ')}</strong></div>`:''}
+      </div>
+      <div class="rc-footer">
+        ${cdHtml}
+        ${footerBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// EMAILS
+// ══════════════════════════════════════════════
+function toList(...e){return e.filter(Boolean).join(', ');}
+function bossFor(rec){ return rec.tlBossEmail || config.bossEmail || '[jefe@empresa.com]'; }
+function generateDeliveryEmail(rec){
+  const dt=new Date(rec.deliveredAt),dl=rec.deadline?new Date(rec.deadline):null;
+  const to=toList(bossFor(rec), rec.tlEmail||'[tl@empresa.com]');
+  return `Para: ${to}\nCC: ${config.ccEmail||''}\nAsunto: [RadioControl ${rec.folio}] Entrega de radios — TL: ${rec.tl} | ${rec.area}\n\nSe informa la entrega de radios:\n\n  Folio:          ${rec.folio}\n  Solicitante:    ${rec.requester} (${rec.role==='tl'?'TL':'Rep'})\n  TL responsable: ${rec.tl}\n  Área:           ${rec.area}\n  Entregado:      ${dt.toLocaleString('es-MX')}\n  Radios (${rec.radios.length}): ${rec.radios.join(', ')}\n  Devolver antes: ${dl?dl.toLocaleString('es-MX'):'N/A'}\n\nSistema RadioControl`;
+}
+function generateReturnEmail(rec,complete,missing){
+  const rt=new Date(rec.returnedAt);
+  const to=toList(bossFor(rec), rec.tlEmail||'[tl@empresa.com]');
+  if(complete){
+    return `Para: ${to}\nCC: ${config.ccEmail||''}\nAsunto: ✅ [RadioControl ${rec.folio}] Devolución completa — TL: ${rec.tl}\n\nDevolución completa de radios:\n\n  Folio:         ${rec.folio}\n  TL:            ${rec.tl} | ${rec.area}\n  Devueltos:     ${rec.radios.length} de ${rec.radios.length}\n  Hora:          ${rt.toLocaleString('es-MX')}\n  Radios:        ${rec.radios.join(', ')}\n\n✅ Todos los equipos devueltos correctamente.\n\nSistema RadioControl`;
+  }
+  return `Para: ${to}\nCC: ${config.ccEmail||''}\nAsunto: ⚠️ [RadioControl ${rec.folio}] Devolución PARCIAL — TL: ${rec.tl}\n\nDevolución PARCIAL de radios:\n\n  Folio:         ${rec.folio}\n  TL:            ${rec.tl} | ${rec.area}\n  Devueltos:     ${rec.returnedRadios.length} de ${rec.radios.length}\n  FALTANTES (${missing.length}): ${missing.join(', ')}\n  Hora registro: ${rt.toLocaleString('es-MX')}\n\n⚠️ Se requiere localizar los equipos faltantes.\n\nSistema RadioControl`;
+}
+function generateAlertEmail(rec,missing){
+  const dl=rec.deadline?new Date(rec.deadline):null;
+  const to=toList(bossFor(rec), config.nextSupEmail||'[supervisor@empresa.com]', rec.tlEmail||'[tl@empresa.com]');
+  return `Para: ${to}\nCC: ${config.ccEmail||''}\nAsunto: 🚨 [ALERTA ${rec.folio}] Radios NO devueltos — TL: ${rec.tl}\n\nATENCIÓN: Radios no devueltos al vencer holgura.\n\n  Folio:        ${rec.folio}\n  TL:           ${rec.tl} | ${rec.area}\n  Plazo venció: ${dl?dl.toLocaleString('es-MX'):'N/A'}\n  Pendientes (${missing.length}): ${missing.join(', ')}\n\nAcción inmediata requerida.\n\nSistema RadioControl — Alerta automática`;
+}
+
+// ══════════════════════════════════════════════
+// RESEND EMAIL
+// ══════════════════════════════════════════════
+function resendEmail(id){
+  const rec=records.find(r=>r.id===id); if(!rec) return;
+  if(rec.status==='returned'){
+    const missing=rec.missingRadios||[];
+    const complete=missing.length===0;
+    showEmailModal(
+      complete?'✅ Correo de devolución — '+rec.folio:'⚠️ Correo de devolución parcial — '+rec.folio,
+      generateReturnEmail(rec,complete,missing)
+    );
+  } else {
+    showEmailModal('📤 Correo de entrega — '+rec.folio, generateDeliveryEmail(rec));
+  }
+}
+
+// ══════════════════════════════════════════════
+// EMAIL MODAL
+// ══════════════════════════════════════════════
+function showEmailModal(title,content){
+  currentEmail=content;
+  document.getElementById('emailModalTitle').textContent=title;
+  document.getElementById('emailContent').textContent=content;
+  document.getElementById('emailModal').classList.add('active');
+}
+function closeEmailModal(){document.getElementById('emailModal').classList.remove('active');}
+function copyEmail(){navigator.clipboard.writeText(currentEmail).then(()=>showToast('📋 Copiado'));}
+function openMailto(){
+  const lines=currentEmail.split('\n');
+  const to=lines[0].replace('Para: ','').trim();
+  const subj=lines[2].replace('Asunto: ','').trim();
+  const body=currentEmail;
+  const url='https://mail.google.com/mail/?view=cm&fs=1'
+    +'&to='+encodeURIComponent(to)
+    +'&su='+encodeURIComponent(subj)
+    +'&body='+encodeURIComponent(body);
+  window.open(url,'_blank');
+}
+
+// ══════════════════════════════════════════════
+// TL ADMIN
+// ══════════════════════════════════════════════
+function openTLAdmin(){adminSelectedArea='';renderAdminAreaList();renderAdminTLList();switchAdminTab('manual');document.getElementById('tlAdminModal').classList.add('active');}
+function closeTLAdmin(){document.getElementById('tlAdminModal').classList.remove('active');renderAreaSelect();updateSummary();}
+
+function switchAdminTab(t){
+  ['manual','csv'].forEach(tab=>{
+    document.getElementById(`atab-${tab}`).classList.toggle('active',tab===t);
+    document.getElementById(`adminTab-${tab}`).style.display=tab===t?(tab==='manual'?'flex':'flex'):'none';
+  });
+  if(t==='csv') clearCSVPreview();
+}
+
+function renderAdminAreaList(){
+  const c=document.getElementById('areaList');
+  const sorted=Object.keys(areas).sort((a,b)=>a.localeCompare(b,'es'));
+  if(!sorted.length){c.innerHTML='<div class="placeholder-hint">Sin áreas.</div>';return;}
+  c.innerHTML=sorted.map(a=>`<div class="area-item${adminSelectedArea===a?' selected':''}" onclick="selectAdminArea('${esc(a)}')"><div><span>${esc(a)}</span><br><small>${areas[a].length} TL${areas[a].length!==1?'s':''}</small></div><button class="del-btn" onclick="event.stopPropagation();deleteArea('${esc(a)}')">🗑</button></div>`).join('');
+}
+function addArea(){
+  const inp=document.getElementById('newAreaInput');const n=inp.value.trim();
+  if(!n)return;
+  if(areas[n]!==undefined){showToast('⚠️ Área ya existe',true);return;}
+  areas[n]=[];inp.value='';save();saveAreas();renderAdminAreaList();showToast(`✅ Área "${n}" creada`);
+}
+function deleteArea(n){
+  if(!confirm(`¿Eliminar "${n}" y todos sus TLs?`))return;
+  delete areas[n];
+  if(adminSelectedArea===n){adminSelectedArea='';renderAdminTLList();}
+  save();renderAdminAreaList();
+}
+function selectAdminArea(n){
+  adminSelectedArea=n;
+  document.getElementById('adminSelArea').textContent=n;
+  document.getElementById('addTLRow').style.display='flex';
+  document.getElementById('addTLEmailRow').style.display='block';
+  renderAdminAreaList();renderAdminTLList();
+}
+function renderAdminTLList(){
+  const c=document.getElementById('adminTLList');
+  if(!adminSelectedArea){c.innerHTML='<div class="placeholder-hint">← Selecciona un área</div>';return;}
+  const tls=(areas[adminSelectedArea]||[]).slice().sort((a,b)=>{
+    const na=typeof a==='object'?a.name:a;
+    const nb=typeof b==='object'?b.name:b;
+    return na.localeCompare(nb,'es');
+  });
+  if(!tls.length){c.innerHTML='<div class="placeholder-hint">Sin TLs.</div>';return;}
+  c.innerHTML=tls.map((t,i)=>{
+    const name=typeof t==='object'?t.name:t;
+    const email=typeof t==='object'?(t.email||''):'';
+    const boss=typeof t==='object'?(t.boss||''):'';
+    return `<div class="tl-item" style="flex-direction:column;align-items:stretch;gap:3px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span>👤 <strong>${esc(name)}</strong></span>
+        <button class="del-btn" onclick="deleteTL('${esc(name)}')">🗑</button>
+      </div>
+      ${email?`<span style="font-size:10px;color:var(--muted);font-family:'Courier New',monospace;">✉ ${esc(email)}</span>`:''}
+      ${boss?`<span style="font-size:10px;color:var(--muted);font-family:'Courier New',monospace;">👔 ${esc(boss)}</span>`:''}
+    </div>`;
+  }).join('');
+}
+function addTL(){
+  if(!adminSelectedArea)return;
+  const n=document.getElementById('newTLInput').value.trim();
+  if(!n)return;
+  const existing=areas[adminSelectedArea];
+  const exists=existing.some(t=>(typeof t==='object'?t.name:t)===n);
+  if(exists){showToast('⚠️ TL ya existe',true);return;}
+  const email=document.getElementById('newTLEmailInput').value.trim();
+  const boss=document.getElementById('newTLBossInput').value.trim();
+  areas[adminSelectedArea].push({name:n,email,boss});
+  document.getElementById('newTLInput').value='';
+  document.getElementById('newTLEmailInput').value='';
+  document.getElementById('newTLBossInput').value='';
+  save();saveAreas();renderAdminTLList();renderAdminAreaList();showToast(`✅ TL "${n}" agregado`);
+}
+function deleteTL(n){
+  if(!adminSelectedArea)return;
+  areas[adminSelectedArea]=areas[adminSelectedArea].filter(t=>(typeof t==='object'?t.name:t)!==n);
+  save();saveAreas();renderAdminTLList();renderAdminAreaList();
+}
+
+// ── CSV IMPORT ──────────────────────────────────
+let csvParsed=[];
+function downloadTemplate(){
+  const csv='Area,Nombre TL,Correo TL,Correo Jefe\nInbound,María García,maria@empresa.com,jefe.inbound@empresa.com\nOutbound,Juan Pérez,juan@empresa.com,jefe.outbound@empresa.com';
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='plantilla_tls.csv';a.click();
+}
+function handleCSVDrop(e){
+  e.preventDefault();document.getElementById('csvDropZone').classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];if(file) handleCSVFile(file);
+}
+function handleCSVFile(file){
+  if(!file){return;}
+  if(!file.name.endsWith('.csv')&&file.type!=='text/csv'&&!file.type.includes('csv')){
+    showToast('⚠️ Selecciona un archivo .csv',true);return;
+  }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{ parseCSV(e.target.result); }
+    catch(err){ showToast('⚠️ Error al leer el CSV: '+err.message,true); }
+  };
+  reader.readAsText(file,'UTF-8');
+}
+function parseCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2){showToast('⚠️ El CSV está vacío o sin datos',true);return;}
+  // Detect header row
+  const header=lines[0].split(',').map(h=>h.trim().toLowerCase());
+  const iArea=header.findIndex(h=>h.includes('area')||h.includes('área'));
+  const iName=header.findIndex(h=>h.includes('nombre')||h.includes('tl'));
+  const iEmail=header.findIndex(h=>h.includes('correo tl')||h.includes('email tl')||h.includes('correo_tl'));
+  const iBoss=header.findIndex(h=>h.includes('jefe')||h.includes('boss')||h.includes('correo jefe'));
+
+  if(iArea<0||iName<0){showToast('⚠️ No se encontraron columnas Area y Nombre TL',true);return;}
+
+  csvParsed=[];
+  for(let i=1;i<lines.length;i++){
+    const cols=splitCSVLine(lines[i]);
+    if(!cols[iArea]||!cols[iName]) continue;
+    const area=(cols[iArea]||'').trim();
+    const name=(cols[iName]||'').trim();
+    const email=iEmail>=0?(cols[iEmail]||'').trim():'';
+    const boss=iBoss>=0?(cols[iBoss]||'').trim():'';
+    if(area&&name) csvParsed.push({area,name,email,boss});
+  }
+  if(!csvParsed.length){showToast('⚠️ No se encontraron filas válidas',true);return;}
+  renderCSVPreview();
+}
+function splitCSVLine(line){
+  // Handle quoted fields
+  const result=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){result.push(cur);cur='';}
+    else{cur+=c;}
+  }
+  result.push(cur);
+  return result;
+}
+function renderCSVPreview(){
+  const preview=document.getElementById('csvPreview');
+  const body=document.getElementById('csvPreviewBody');
+  document.getElementById('csvPreviewTitle').textContent=`Vista previa — ${csvParsed.length} TL${csvParsed.length!==1?'s':''} encontrados`;
+  body.innerHTML=csvParsed.map(row=>{
+    const exists=areas[row.area]&&areas[row.area].some(t=>(typeof t==='object'?t.name:t)===row.name);
+    return `<tr style="border-bottom:1px solid var(--steel);">
+      <td style="padding:6px 10px;">${esc(row.area)}</td>
+      <td style="padding:6px 10px;">${esc(row.name)}</td>
+      <td style="padding:6px 10px;font-family:'Courier New',monospace;font-size:11px;color:var(--muted);">${esc(row.email)||'—'}</td>
+      <td style="padding:6px 10px;font-family:'Courier New',monospace;font-size:11px;color:var(--muted);">${esc(row.boss)||'—'}</td>
+      <td style="padding:6px 10px;">
+        ${exists
+          ? '<span style="font-size:10px;background:rgba(230,126,34,.15);color:var(--warn);padding:2px 7px;border-radius:10px;">Ya existe</span>'
+          : '<span style="font-size:10px;background:rgba(46,204,113,.15);color:var(--ok);padding:2px 7px;border-radius:10px;">Nuevo</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+  preview.style.display='flex';
+  document.getElementById('csvDropZone').style.display='none';
+}
+function clearCSVPreview(){
+  csvParsed=[];
+  document.getElementById('csvPreview').style.display='none';
+  document.getElementById('csvDropZone').style.display='block';
+  document.getElementById('csvFileInput').value='';
+}
+function confirmCSVImport(){
+  if(!csvParsed.length)return;
+  const merge=document.getElementById('csvMerge').checked;
+  let added=0,updated=0,skipped=0;
+  csvParsed.forEach(row=>{
+    if(!areas[row.area]) areas[row.area]=[];
+    const idx=areas[row.area].findIndex(t=>(typeof t==='object'?t.name:t)===row.name);
+    if(idx>=0){
+      if(merge){skipped++;}
+      else{areas[row.area][idx]={name:row.name,email:row.email,boss:row.boss};updated++;}
+    } else {
+      areas[row.area].push({name:row.name,email:row.email,boss:row.boss});added++;
+    }
+  });
+  save();saveAreas();
+  clearCSVPreview();
+  switchAdminTab('manual');
+  renderAdminAreaList();renderAdminTLList();renderAreaSelect();
+  showToast(`✅ Importados: ${added} nuevos, ${updated} actualizados, ${skipped} sin cambios`);
+}
+
+// ══════════════════════════════════════════════
+// TOAST / UTILS
+// ══════════════════════════════════════════════
+function showToast(msg,danger=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(danger?' danger':'')+' show';setTimeout(()=>t.className='toast',3200);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+init();
+</script>
+</body>
+</html>
