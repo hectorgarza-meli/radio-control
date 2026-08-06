@@ -369,18 +369,17 @@ tbody td{padding:9px 12px;vertical-align:middle;}
 <div class="tab-content" id="tab-recepcion-content">
   <div class="recepcion-layout">
 
-    <!-- PANEL DE ESCANEO ACTIVO -->
-    <div id="recepOverlay" onclick="closeScanPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:149;"></div>
-    <div class="scan-panel" id="recepScanPanel" style="display:none;">
-      <div class="scan-panel-header">
-        <h3 id="recepPanelTitle">📥 Registrar devolución</h3>
-        <button class="scan-panel-close" onclick="closeScanPanel()">✕</button>
+    <!-- MODAL DE DEVOLUCIÓN -->
+    <div id="recepOverlay" onclick="closeScanPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:149;"></div>
+    <div id="recepScanPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:150;width:90%;max-width:540px;background:var(--navy-mid);border:1px solid var(--steel-light);border-radius:14px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.5);max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 id="recepPanelTitle" style="font-size:14px;font-weight:600;">📥 Registrar devolución</h3>
+        <button onclick="closeScanPanel()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;">✕</button>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Escanea los radios que se devuelven. Los que ya fueron escaneados se marcan en verde.</div>
-      <div id="recepExpected" class="expected-chips"></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Escanea los radios que se devuelven — se marcan en verde conforme los escanas.</div>
+      <div id="recepExpected" class="expected-chips" style="margin-bottom:10px;"></div>
       <div class="scan-row" style="margin-bottom:8px;">
-        <input type="text" id="recepScanInput" placeholder="Escanear # radio" maxlength="20"
-          onkeydown="if(event.key==='Enter') addRecepRadio()">
+        <input type="text" id="recepScanInput" placeholder="Escanear # radio" maxlength="20" onkeydown="if(event.key==='Enter') addRecepRadio()">
         <button class="btn-plus" onclick="addRecepRadio()">＋</button>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:12px;" id="recepMeta">Devueltos: 0 / 0</div>
@@ -391,20 +390,41 @@ tbody td{padding:9px 12px;vertical-align:middle;}
       </div>
     </div>
 
-    <!-- GRID DE TARJETAS -->
+    <!-- TABLA DE REGISTROS -->
     <div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div>
           <div class="section-title" style="margin-bottom:2px;">📥 Radios en campo — pendientes de devolución</div>
-          <span style="font-size:11px;color:var(--muted);">Selecciona un registro para iniciar la devolución</span>
+          <span style="font-size:11px;color:var(--muted);">Haz clic en "Devolver" para registrar la devolución</span>
         </div>
-        <select id="recepFilter" onchange="renderRecepCards()" style="background:var(--steel);border:1px solid var(--steel-light);border-radius:7px;color:var(--ice);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
+        <select id="recepFilter" onchange="renderRecepCards()" style="background:var(--steel);border:1px solid var(--steel-light);border-radius:7px;color:var(--ic);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
           <option value="active">Solo activos</option>
           <option value="all">Todos</option>
         </select>
       </div>
-      <div class="recep-grid" id="recepGrid">
-        <div class="empty-state" style="grid-column:1/-1;"><div>📻</div>Sin registros activos</div>
+
+      <div class="table-container">
+        <div style="padding:10px 16px 8px;border-bottom:1px solid var(--steel);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;font-weight:600;">Registros</span>
+          <span style="font-size:11px;color:var(--muted);" id="recepCount">0 registros</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);">Solicitante</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);">TL / Área</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);">Folio</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);">Radios</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);">Devolver antes</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);">Estado</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);">Tiempo</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);background:var(--steel);border-bottom:1px solid var(--steel-light);">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="recepBody">
+            <tr><td colspan="8"><div class="empty-state"><div>📻</div>Sin registros activos</div></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -977,69 +997,67 @@ function renderRecords(){
 }
 
 // ══════════════════════════════════════════════
-// RENDER RECEPCIÓN CARDS
+// RENDER RECEPCIÓN TABLE
 // ══════════════════════════════════════════════
 function renderRecepCards(){
-  const grid=document.getElementById('recepGrid');
+  const tbody=document.getElementById('recepBody');
   const filter=document.getElementById('recepFilter').value;
-  let list= filter==='all' ? records : records.filter(r=>r.status!=='returned');
+  let list=filter==='all'?records:records.filter(r=>r.status!=='returned');
   list=[...list].sort((a,b)=>{
     const order={late:0,warned:1,active:2,returned:3};
-    return (order[a.status]||3)-(order[b.status]||3);
+    return(order[a.status]||3)-(order[b.status]||3);
   });
-  if(!list.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1;"><div>✅</div>Sin registros pendientes</div>';return;}
+  document.getElementById('recepCount').textContent=`${list.length} registro${list.length!==1?'s':''}`;
+  if(!list.length){
+    tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><div>✅</div>Sin registros pendientes</div></td></tr>';
+    return;
+  }
   const now=new Date();
-  grid.innerHTML=list.map(rec=>{
+  tbody.innerHTML=list.map(rec=>{
     const dl=rec.deadline?new Date(rec.deadline):null;
     const diff=dl?(dl-now)/60000:null;
-    let cardCls='recep-card', stHtml='', cdHtml='', footerBtn='';
+    let st='',cd='',ac='';
+    const dlTime=dl?dl.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+    const delivTime=new Date(rec.deliveredAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:true});
+
     if(rec.status==='returned'){
-      const hasMiss=rec.missingRadios&&rec.missingRadios.length>0;
-      cardCls+=' returned-card';
-      stHtml=hasMiss?`<span class="pill pill-partial">Parcial</span>`:`<span class="pill pill-returned">✅ Devuelto</span>`;
-      cdHtml=rec.returnedAt?`<span style="font-size:11px;color:var(--muted);">Devuelto ${new Date(rec.returnedAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</span>`:'';
-      footerBtn=`<button class="btn-icon" onclick="resendEmail('${rec.id}')">📧 Reenviar correo</button>`;
-    } else if(rec.status==='late'){
+      const hm=rec.missingRadios&&rec.missingRadios.length>0;
+      st=hm?`<span class="pill pill-partial">Parcial</span>`:`<span class="pill pill-returned">✅ Devuelto</span>`;
+      const rt=rec.returnedAt?new Date(rec.returnedAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:true}):'';
+      cd=`<span style="color:var(--muted);font-size:11px;">${rt}</span>`;
+      ac=`<button class="btn-icon" onclick="resendEmail('${rec.id}')">📧 Reenviar</button>`;
+    }else if(rec.status==='late'){
       const over=dl?Math.floor((now-dl)/60000):0;
-      cardCls+=' late-card'; stHtml='<span class="pill pill-late">⚠ Vencido</span>';
-      cdHtml=`<span class="cd cd-d" style="font-size:13px;">+${over} min vencido</span>`;
-      footerBtn=`<button class="btn-icon" style="background:var(--danger);color:#fff;" onclick="openScanPanel('${rec.id}')">📥 Registrar devolución</button>`;
-    } else if(rec.status==='warned'){
+      st='<span class="pill pill-late">⚠ Vencido</span>';
+      cd=`<span class="cd cd-danger">+${over}m</span>`;
+      ac=`<button class="btn-icon" style="background:var(--danger);color:#fff;" onclick="openScanPanel('${rec.id}')">📥 Devolver</button>`;
+    }else if(rec.status==='warned'){
       const mins=diff!==null?Math.ceil(diff):'?';
-      cardCls+=' warned-card'; stHtml='<span class="pill pill-warned">⏰ Por vencer</span>';
-      cdHtml=`<span class="cd cd-w" style="font-size:13px;">${mins} min restantes</span>`;
-      footerBtn=`<button class="btn-icon" onclick="openScanPanel('${rec.id}')">📥 Registrar devolución</button>`;
-    } else {
+      st='<span class="pill pill-warned">⏰ Por vencer</span>';
+      cd=`<span class="cd cd-warn">${mins}m</span>`;
+      ac=`<button class="btn-icon" onclick="openScanPanel('${rec.id}')">📥 Devolver</button>`;
+    }else{
       const mins=diff!==null?Math.ceil(diff):'?';
-      const c=diff!==null?(diff<30?'cd-w':'cd-ok'):'cd-ok';
-      cardCls+=' active-card'; stHtml='<span class="pill pill-active">Activo</span>';
-      cdHtml=`<span class="cd ${c}" style="font-size:13px;">${mins} min restantes</span>`;
-      footerBtn=`<button class="btn-icon" onclick="openScanPanel('${rec.id}')">📥 Registrar devolución</button>`;
+      const cls=diff!==null?(diff<30?'cd-warn':'cd-ok'):'cd-ok';
+      st='<span class="pill pill-active">Activo</span>';
+      cd=`<span class="cd ${cls}">${mins}m</span>`;
+      ac=`<button class="btn-icon" onclick="openScanPanel('${rec.id}')">📥 Devolver</button>`;
     }
-    const delivTime=new Date(rec.deliveredAt).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-    const dlTime=dl?dl.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}):'—';
-    return `<div class="${cardCls}">
-      <div class="rc-head">
-        <div class="rc-head-info">
-          <strong>${esc(rec.requester)}</strong>
-          <span>${rec.role==='tl'?'Team Leader':'Representante'} · ${delivTime}</span>
-        </div>
-        ${stHtml}
-      </div>
-      <div class="rc-body">
-        <div class="rc-row"><span>TL responsable</span><strong>${esc(rec.tl)}</strong></div>
-        <div class="rc-row"><span>Área</span><strong>${esc(rec.area)}</strong></div>
-        <div class="rc-row"><span>Folio</span><strong style="font-family:'Courier New',monospace;font-size:11px;">${esc(rec.folio)}</strong></div>
-        <div class="rc-row"><span>Devolver antes de</span><strong style="color:var(--signal);">${dlTime}</strong></div>
-        <div class="rc-row"><span>Radios (${rec.radios.length})</span></div>
-        <div class="rc-radios">${esc(rec.radios.join('  '))}</div>
-        ${rec.missingRadios&&rec.missingRadios.length?`<div class="rc-row"><span style="color:var(--danger);">Faltantes</span><strong style="color:var(--danger);">${rec.missingRadios.join(', ')}</strong></div>`:''}
-      </div>
-      <div class="rc-footer">
-        ${cdHtml}
-        ${footerBtn}
-      </div>
-    </div>`;
+
+    const radioList=rec.radios&&rec.radios.length<=4
+      ?rec.radios.join(', ')
+      :`${rec.radios.slice(0,3).join(', ')} +${rec.radios.length-3} más`;
+
+    return`<tr style="border-bottom:1px solid var(--steel);">
+      <td style="padding:9px 12px;"><strong>${esc(rec.requester)}</strong><br><span style="font-size:10px;color:var(--muted);">${rec.role==='tl'?'TL':'Rep'} · ${delivTime}</span></td>
+      <td style="padding:9px 12px;"><strong>${esc(rec.tl)}</strong><br><span style="font-size:10px;color:var(--muted);">${esc(rec.area)}</span></td>
+      <td style="padding:9px 12px;font-family:'Courier New',monospace;font-size:11px;color:var(--muted);">${esc(rec.folio)}</td>
+      <td style="padding:9px 12px;" title="${(rec.radios||[]).join(', ')}"><span style="font-family:'Courier New',monospace;font-size:11px;color:var(--signal);">${esc(radioList)}</span><br><span style="font-size:10px;color:var(--muted);">${rec.radios?rec.radios.length:0} radio(s)</span></td>
+      <td style="padding:9px 12px;font-weight:600;color:var(--signal);font-size:12px;">${dlTime}</td>
+      <td style="padding:9px 12px;">${st}</td>
+      <td style="padding:9px 12px;">${cd}</td>
+      <td style="padding:9px 12px;">${ac}</td>
+    </tr>`;
   }).join('');
 }
 
