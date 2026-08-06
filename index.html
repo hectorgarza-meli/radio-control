@@ -612,7 +612,8 @@ async function init() {
   updateClock();
   setInterval(updateClock, 1000);
   setInterval(checkDeadlines, 30000);
-  setInterval(syncFromSheets, 15000); // auto-sync every 15s
+  setInterval(syncFromSheets, 15000);
+  setTimeout(syncFromSheets, 5000); // first sync after 5s // auto-sync every 15s
   renderAreaSelect(); renderRecords(); renderRecepCards(); updateStats(); updateSummary();
 }
 
@@ -649,6 +650,7 @@ async function loadFromSheets() {
 }
 
 async function syncFromSheets() {
+  if(window._syncPaused) return; // don't sync while modal is open
   try {
     const res = await gsGet('getRecords');
     if (res && res.records) {
@@ -863,12 +865,14 @@ function openScanPanel(id){
   renderExpected(rec);
   document.getElementById('recepOverlay').style.display='block';
   document.getElementById('recepScanPanel').style.display='block';
+  window._syncPaused=true; // pause auto-sync
   setTimeout(()=>document.getElementById('recepScanInput').focus(),200);
 }
 function closeScanPanel(){
   document.getElementById('recepScanPanel').style.display='none';
   document.getElementById('recepOverlay').style.display='none';
   recepCurrentId=null; recepReturned=[];
+  window._syncPaused=false; // resume sync
 }
 
 function renderExpected(rec){
