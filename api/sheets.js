@@ -1,4 +1,4 @@
-const GS_URL = 'https://script.google.com/a/macros/mercadolibre.com.mx/s/AKfycbzbBi8dkuvfwxDlDYxkaUyAKyIZ-Xtb6a-AoaFtlrrpH9uL4oKMAe8ZfnkgwTHUMwcf/exec';
+const GS_URL = 'https://script.google.com/macros/s/AKfycbwrFj_O2_WCr_Oy1bUWnaGLms586zPAYJt9Hxl2JufaITV9pMEh5yf-oJae_QdhTfU/exec';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
