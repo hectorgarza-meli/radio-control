@@ -923,20 +923,28 @@ function renderExpected(rec){
 }
 
 function addRecepRadio(){
-  const rec=records.find(r=>r.id===recepCurrentId); if(!rec) return;
+  const rec=records.find(function(r){return String(r.id)===String(recepCurrentId);}); if(!rec) return;
   const inp=document.getElementById('recepScanInput'); const val=inp.value.trim().toUpperCase(); if(!val) return;
   if(recepReturned.includes(val)){showToast('⚠️ Ya escaneado',true);inp.value='';return;}
-  if(!rec.radios.includes(val)){showToast(`⚠️ Radio ${val} no pertenece a este registro`,true);inp.value='';return;}
+  if(!(rec.radios||[]).includes(val)){showToast('⚠️ Radio '+val+' no pertenece a este registro',true);inp.value='';return;}
   recepReturned.push(val); inp.value='';
-  renderExpected(rec);
-  document.getElementById('recepMeta').textContent=`Devueltos: ${recepReturned.length} / ${rec.radios.length}`;
+  // Update chips
+  const container=document.getElementById('recepExpected');
+  container.innerHTML='';
+  (rec.radios||[]).forEach(function(r){
+    const span=document.createElement('span');
+    span.className='exp-chip'+(recepReturned.includes(r)?' done':'');
+    span.textContent='📻 '+r;
+    container.appendChild(span);
+  });
+  document.getElementById('recepMeta').textContent='Devueltos: '+recepReturned.length+' / '+rec.radios.length;
   inp.focus();
 }
 
 function confirmRecepReturn(){
-  const rec=records.find(r=>r.id===recepCurrentId); if(!rec) return;
+  const rec=records.find(function(r){return String(r.id)===String(recepCurrentId);}); if(!rec) return;
   if(!recepReturned.length){showToast('⚠️ Escanea al menos un radio',true);return;}
-  const missing=rec.radios.filter(r=>!recepReturned.includes(r));
+  const missing=(rec.radios||[]).filter(function(r){return !recepReturned.includes(r);});
   const complete=missing.length===0;
   rec.returnedRadios=[...recepReturned]; rec.missingRadios=missing;
   rec.status='returned'; rec.returnedAt=new Date().toISOString();
