@@ -974,8 +974,7 @@ function renderRecords(){
   document.getElementById('recordCount').textContent=`${all.length} mostrado${all.length!==1?'s':''} · ${active.length} activo${active.length!==1?'s':''}`;
   if(!all.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><div>📻</div>Sin registros</div></td></tr>';return;}
   const now=new Date();
-  tbody.innerHTML=all.map(rec=>{
-    const dl=rec.deadline?new Date(rec.deadline):null;
+  tbody.innerHTML=all.map(rec=>{    const dl=rec.deadline?new Date(rec.deadline):null;
     const diff=dl?(dl-now)/60000:null;
     let st='',cd='',ac='';
     if(rec.status==='returned'){
@@ -1005,6 +1004,7 @@ function renderRecords(){
       <td class="td-mono">${esc(rec.radios.join(' '))} <span style="color:var(--muted);font-size:10px;">(${rec.radios.length})</span></td>
       <td>${st}</td><td>${cd}</td><td>${ac}</td></tr>`;
   }).join('');
+  setTimeout(attachRecepActions, 50);
 }
 
 // ══════════════════════════════════════════════
@@ -1070,6 +1070,7 @@ function renderRecepCards(){
       <td style="padding:9px 12px;">${ac}</td>
     </tr>`;
   }).join('');
+  setTimeout(attachRecepActions, 50);
 }
 
 // ══════════════════════════════════════════════
@@ -1332,6 +1333,20 @@ function confirmCSVImport(){
 // ══════════════════════════════════════════════
 function showToast(msg,danger=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(danger?' danger':'')+' show';setTimeout(()=>t.className='toast',3200);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// Attach click handlers directly to recep-action buttons
+function attachRecepActions(){
+  document.querySelectorAll('.recep-action').forEach(btn=>{
+    btn.onclick=null;
+    btn.addEventListener('click',function(e){
+      e.stopImmediatePropagation();
+      const id=this.getAttribute('data-id');
+      const action=this.getAttribute('data-action');
+      if(action==='devolver') openScanPanel(id);
+      if(action==='resend') resendEmail(id);
+    });
+  });
+}
 
 // Event delegation for all devolver/resend buttons
 document.addEventListener('click', function(e){
